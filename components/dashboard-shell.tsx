@@ -12,11 +12,13 @@ export default function DashboardShell({
   links,
   fullName,
   role,
+  storeName,
 }: {
   children: React.ReactNode
   links: NavLink[]
   fullName: string
   role: string
+  storeName: string
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
@@ -41,7 +43,7 @@ export default function DashboardShell({
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-2 font-mono text-sm tracking-widest text-neutral-800">
               <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500" />
-              MUHAM&nbsp;POS
+              {storeName}
             </div>
             <button
               onClick={() => setMenuOpen(false)}

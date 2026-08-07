@@ -21,6 +21,7 @@ export default async function ReportsPage() {
     { data: lowStock },
     { data: topProducts },
     { data: paymentRows },
+    { data: profitRows },
   ] = await Promise.all([
     supabase
       .from('daily_sales_summary')
@@ -40,10 +41,14 @@ export default async function ReportsPage() {
 
     supabase
       .from('sales')
-      .select(
-        'cash_amount, card_amount, transfer_amount, created_at'
-      )
+      .select('cash_amount, card_amount, transfer_amount, created_at')
+      .eq('status', 'completed')
       .gte('created_at', `${weekAgo}T00:00:00`),
+
+    supabase
+      .from('daily_profit_summary')
+      .select('*')
+      .gte('sale_day', weekAgo),
   ])
 
   const rows = summary || []
@@ -59,6 +64,9 @@ export default async function ReportsPage() {
     (sum, r) => sum + Number(r.num_sales),
     0
   )
+
+  const todayProfitRow = (profitRows || []).find((r) => r.sale_day === today)
+  const weekProfit = (profitRows || []).reduce((sum, r) => sum + Number(r.profit || 0), 0)
 
   const paymentTotals = (paymentRows || []).reduce(
     (acc, row) => {
@@ -107,7 +115,7 @@ export default async function ReportsPage() {
         Reports
       </h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-neutral-200 bg-white p-5">
           <p className="text-xs uppercase tracking-wider text-neutral-500">
             Today
@@ -145,6 +153,18 @@ export default async function ReportsPage() {
           >
             View products →
           </Link>
+        </div>
+
+        <div className="rounded-xl border border-neutral-200 bg-white p-5">
+          <p className="text-xs uppercase tracking-wider text-neutral-500">
+            Profit (7 days)
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-neutral-900">
+            ₦{weekProfit.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-neutral-400">
+            Today: ₦{Number(todayProfitRow?.profit || 0).toLocaleString()} · approximate
+          </p>
         </div>
       </div>
 

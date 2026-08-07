@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Receipt from '@/components/receipt'
 
 type Product = {
   id: string
@@ -74,6 +75,8 @@ export default function SellPage() {
   const [receipt, setReceipt] = useState<{
     saleNumber: string
     items: CartItem[]
+    subtotal: number
+    discount: number
     total: number
     cash: number
     card: number
@@ -303,6 +306,8 @@ export default function SellPage() {
     setReceipt({
       saleNumber: sale?.sale_number || String(saleId),
       items: cart,
+      subtotal,
+      discount: discountValue,
       total,
       cash,
       card,
@@ -330,74 +335,25 @@ export default function SellPage() {
   // ---- Receipt view ----
   if (receipt) {
     return (
-      <div className="mx-auto max-w-md">
-        <div className="rounded-xl border border-neutral-200 bg-white p-6 font-mono">
-          <div className="text-center">
-            <p className="text-lg font-bold text-neutral-900">{storeSettings?.store_name || 'Store'}</p>
-            {storeSettings?.address && <p className="text-xs text-neutral-500">{storeSettings.address}</p>}
-            {storeSettings?.phone && <p className="text-xs text-neutral-500">{storeSettings.phone}</p>}
-          </div>
-
-          <div className="mt-4 border-t border-dashed border-neutral-300 pt-4 text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-600">✓</div>
-            <p className="mt-2 text-sm font-semibold text-neutral-900">{receipt.saleNumber}</p>
-            <p className="text-xs text-neutral-400">{new Date().toLocaleString('en-NG')}</p>
-            {receipt.customer && (
-              <p className="mt-1 text-xs text-neutral-500">
-                {receipt.customer.name || receipt.customer.company_or_store}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-4 space-y-2 border-t border-dashed border-neutral-300 pt-4">
-            {receipt.items.map((i, idx) => (
-              <div key={idx} className="flex justify-between text-sm">
-                <span className="text-neutral-700">
-                  {i.product_name} × {i.quantity} {i.unit_name}
-                </span>
-                <span className="text-neutral-900">₦{(i.price * i.quantity).toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex justify-between border-t border-dashed border-neutral-300 pt-4 text-base font-bold text-neutral-900">
-            <span>TOTAL</span>
-            <span>₦{receipt.total.toLocaleString()}</span>
-          </div>
-
-          <div className="mt-2 space-y-1 text-right text-xs text-neutral-400">
-            {receipt.cash > 0 && <p>Cash: ₦{receipt.cash.toLocaleString()}</p>}
-            {receipt.card > 0 && <p>Card: ₦{receipt.card.toLocaleString()}</p>}
-            {receipt.transfer > 0 && <p>Transfer: ₦{receipt.transfer.toLocaleString()}</p>}
-          </div>
-
-          {(storeSettings?.footer_message || storeSettings?.return_policy) && (
-            <div className="mt-4 border-t border-dashed border-neutral-300 pt-4 text-center">
-              {storeSettings?.footer_message && (
-                <p className="text-sm font-medium text-neutral-700">{storeSettings.footer_message}</p>
-              )}
-              {storeSettings?.return_policy && (
-                <p className="mt-1 text-xs text-neutral-400">{storeSettings.return_policy}</p>
-              )}
-            </div>
-          )}
-
-          <div className="mt-6 flex gap-2 print:hidden">
-            <button
-              onClick={() => window.print()}
-              className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
-            >
-              Print
-            </button>
-            <button
-              onClick={startNewSale}
-              className="flex-1 rounded-lg bg-emerald-500 px-4 py-3 font-medium text-white transition hover:bg-emerald-600"
-            >
-              New Sale
-            </button>
-          </div>
-        </div>
-      </div>
+      <Receipt
+        saleNumber={receipt.saleNumber}
+        dateLabel={new Date().toLocaleString('en-NG')}
+        items={receipt.items.map((i) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          unit_name: i.unit_name,
+          price: i.price,
+        }))}
+        subtotal={receipt.subtotal}
+        discount={receipt.discount}
+        total={receipt.total}
+        cash={receipt.cash}
+        card={receipt.card}
+        transfer={receipt.transfer}
+        customerLabel={receipt.customer ? receipt.customer.name || receipt.customer.company_or_store : null}
+        storeSettings={storeSettings}
+        onNewSale={startNewSale}
+      />
     )
   }
 

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
 import DashboardShell from '@/components/dashboard-shell'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function DashboardLayout({
   children,
@@ -9,6 +10,9 @@ export default async function DashboardLayout({
 }) {
   const profile = await getProfile()
   if (!profile) redirect('/login')
+
+  const supabase = await createClient()
+  const { data: settings } = await supabase.from('store_settings').select('store_name').eq('id', 1).single()
 
   const isAdmin = profile.role === 'admin'
 
@@ -27,7 +31,12 @@ export default async function DashboardLayout({
   const links = isAdmin ? [...baseLinks, ...adminLinks] : baseLinks
 
   return (
-    <DashboardShell links={links} fullName={profile.full_name} role={profile.role}>
+    <DashboardShell 
+      links={links} 
+      fullName={profile.full_name} 
+      role={profile.role}
+      storeName={settings?.store_name || 'POS System'}
+    >
       {children}
     </DashboardShell>
   )

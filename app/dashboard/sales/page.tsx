@@ -12,6 +12,7 @@ type Sale = {
   card_amount: number
   transfer_amount: number
   payment_method: string
+  status: string // Added status field
   profiles: { full_name: string | null } | null
   customers: { name: string | null; company_or_store: string | null } | null
 }
@@ -29,7 +30,7 @@ export default async function SalesHistoryPage({
     .select(
       `
       id, sale_number, created_at, subtotal, discount, total,
-      cash_amount, card_amount, transfer_amount, payment_method,
+      cash_amount, card_amount, transfer_amount, payment_method, status,
       profiles ( full_name ),
       customers ( name, company_or_store )
     `
@@ -43,7 +44,8 @@ export default async function SalesHistoryPage({
   const { data } = await query
   const sales = (data as unknown as Sale[]) || []
 
-  const totalRevenue = sales.reduce((sum, s) => sum + Number(s.total), 0)
+  // Exclude voided sales from total revenue
+  const totalRevenue = sales.filter((s) => s.status !== 'voided').reduce((sum, s) => sum + Number(s.total), 0)
 
   return (
     <div>
@@ -55,12 +57,12 @@ export default async function SalesHistoryPage({
           <h1 className="mt-2 text-2xl font-semibold text-neutral-900">Sales History</h1>
         </div>
         
-          <a
-  href={`/api/sales-csv${from || to ? `?from=${from || ''}&to=${to || ''}` : ''}`}
-  className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
->
-  Download CSV
-  </a>
+        <a
+          href={`/api/sales-csv${from || to ? `?from=${from || ''}&to=${to || ''}` : ''}`}
+          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+        >
+          Download CSV
+        </a>
       </div>
 
       <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
@@ -108,6 +110,7 @@ export default async function SalesHistoryPage({
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Payment</th>
               <th className="px-4 py-3 text-right">Total</th>
+              <th className="px-4 py-3">Status</th> {/* Added Status header */}
               <th className="px-4 py-3 text-right">Details</th>
             </tr>
           </thead>
@@ -126,6 +129,11 @@ export default async function SalesHistoryPage({
                 <td className="px-4 py-3 text-right font-medium text-neutral-900">
                   ₦{Number(s.total).toLocaleString()}
                 </td>
+                <td className="px-4 py-3">
+                  {s.status === 'voided' && (
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">Voided</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Link href={`/dashboard/sales/${s.id}`} className="text-emerald-600 hover:underline">
                     View
@@ -135,7 +143,7 @@ export default async function SalesHistoryPage({
             ))}
             {sales.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-neutral-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-neutral-400">
                   No sales in this range.
                 </td>
               </tr>

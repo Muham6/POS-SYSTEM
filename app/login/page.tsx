@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -13,6 +13,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [storeName, setStoreName] = useState('POS System')
+
+  useEffect(() => {
+    supabase
+      .from('store_settings')
+      .select('store_name')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => {
+        if (data?.store_name) setStoreName(data.store_name)
+      })
+  }, [supabase])
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
@@ -44,7 +56,7 @@ export default function LoginPage() {
         />
         <div className="relative flex items-center gap-2 font-mono text-sm tracking-widest text-neutral-400">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-400" />
-          MUHAM&nbsp;POS
+          {storeName}
         </div>
 
         <div className="relative">
@@ -70,7 +82,7 @@ export default function LoginPage() {
           <div className="mb-8 lg:hidden">
             <div className="flex items-center gap-2 font-mono text-sm tracking-widest text-neutral-400">
               <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-400" />
-              MUHAM&nbsp;POS
+              {storeName}
             </div>
           </div>
 

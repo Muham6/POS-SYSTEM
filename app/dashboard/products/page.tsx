@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { getProducts } from '@/lib/products'
 import DeleteProductButton from '@/components/delete-product-button'
+import CategoryFilter from '@/components/category-filter'
+import { createClient } from '@/lib/supabase/server'
 
 type Product = {
   id: string
@@ -12,8 +13,26 @@ type Product = {
   categories: { name: string } | null
 }
 
-export default async function ProductsPage() {
-  const products = (await getProducts()) as unknown as Product[]
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>
+}) {
+  const { category } = await searchParams
+  const supabase = await createClient()
+
+  let query = supabase
+    .from('products')
+    .select(`id, name, sku, price, stock_quantity, low_stock_threshold, is_active, category_id, categories ( name )`)
+    .eq('is_active', true)
+    .order('name')
+
+  if (category) query = query.eq('category_id', category)
+
+  const { data: productsData } = await query
+  const products = (productsData as unknown as Product[]) || []
+
+  const { data: categories } = await supabase.from('categories').select('id, name').order('name')
 
   return (
     <div>
@@ -23,6 +42,8 @@ export default async function ProductsPage() {
         </h1>
 
         <div className="flex items-center gap-3">
+          <CategoryFilter categories={categories || []} current={category} />
+
           <Link
             href="/dashboard/products/stock-history"
             className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"

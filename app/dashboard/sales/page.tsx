@@ -110,7 +110,7 @@ export default async function SalesHistoryPage({
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Payment</th>
               <th className="px-4 py-3 text-right">Total</th>
-              <th className="px-4 py-3">Status</th> {/* Added Status header */}
+              <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Details</th>
             </tr>
           </thead>

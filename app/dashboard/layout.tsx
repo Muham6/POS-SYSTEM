@@ -12,7 +12,11 @@ export default async function DashboardLayout({
   if (!profile) redirect('/login')
 
   const supabase = await createClient()
-  const { data: settings } = await supabase.from('store_settings').select('store_name').eq('id', 1).single()
+  const { data: settings } = await supabase
+    .from('store_settings')
+    .select('store_name, logo_url')
+    .eq('id', 1)
+    .single()
 
   const isAdmin = profile.role === 'admin'
 
@@ -36,6 +40,7 @@ export default async function DashboardLayout({
       fullName={profile.full_name} 
       role={profile.role}
       storeName={settings?.store_name || 'POS System'}
+      logoUrl={settings?.logo_url}
     >
       {children}
     </DashboardShell>

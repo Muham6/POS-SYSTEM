@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Pencil, History } from 'lucide-react'
 import DeleteProductButton from '@/components/delete-product-button'
 import CategoryFilter from '@/components/category-filter'
 import { createClient } from '@/lib/supabase/server'
@@ -128,16 +129,18 @@ export default async function ProductsPage({
                     <div className="flex items-center justify-end gap-3">
                       <Link
                         href={`/dashboard/products/stock-history?product=${p.id}`}
-                        className="text-neutral-500 hover:underline"
+                        className="text-neutral-500 hover:text-neutral-700"
+                        title="History"
                       >
-                        History
+                        <History size={16} />
                       </Link>
 
                       <Link
                         href={`/dashboard/products/${p.id}/edit`}
-                        className="text-emerald-600 hover:underline"
+                        className="text-emerald-600 hover:text-emerald-700"
+                        title="Edit"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </Link>
 
                       <DeleteProductButton

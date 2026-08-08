@@ -36,6 +36,7 @@ type RawStockMovement = {
 const typeStyles: Record<string, string> = {
   restock: 'bg-emerald-50 text-emerald-700',
   sale: 'bg-blue-50 text-blue-700',
+  return: 'bg-amber-50 text-amber-700',
   adjustment: 'bg-amber-50 text-amber-700',
   damaged: 'bg-red-50 text-red-700',
 }
@@ -158,7 +159,7 @@ export default async function StockHistoryPage({
 
       <div className="mb-4 flex flex-wrap gap-2">
         {(
-          ['all', 'restock', 'sale', 'adjustment', 'damaged'] as const
+          ['all', 'restock', 'sale', 'return', 'adjustment', 'damaged'] as const
         ).map((type) => (
           <Link
             key={type}

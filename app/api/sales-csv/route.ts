@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 type SaleRow = {
   sale_number: string
   created_at: string
+  status: string
   subtotal: number
   discount: number
   total: number
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
       `
       sale_number,
       created_at,
+      status,
       subtotal,
       discount,
       total,
@@ -40,7 +42,7 @@ export async function GET(request: NextRequest) {
       card_amount,
       transfer_amount,
       payment_method,
-      profiles (
+      profiles!sales_cashier_id_fkey (
         full_name
       ),
       customers (
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
   const header = [
     'Invoice',
     'Date',
+    'Status',
     'Cashier',
     'Customer',
     'Payment Method',
@@ -80,6 +83,7 @@ export async function GET(request: NextRequest) {
   const csvRows = rows.map((s) => [
     s.sale_number,
     new Date(s.created_at).toLocaleString('en-NG'),
+    s.status,
     s.profiles?.full_name || '',
     s.customers?.name || s.customers?.company_or_store || '',
     s.payment_method,

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { Eye, ReceiptText } from 'lucide-react'  // Added import
 
 type Sale = {
   id: string
@@ -12,7 +13,7 @@ type Sale = {
   card_amount: number
   transfer_amount: number
   payment_method: string
-  status: string // Added status field
+  status: string
   profiles: { full_name: string | null } | null
   customers: { name: string | null; company_or_store: string | null } | null
 }
@@ -31,7 +32,7 @@ export default async function SalesHistoryPage({
       `
       id, sale_number, created_at, subtotal, discount, total,
       cash_amount, card_amount, transfer_amount, payment_method, status,
-      profiles ( full_name ),
+      profiles!sales_cashier_id_fkey ( full_name ),
       customers ( name, company_or_store )
     `
     )
@@ -41,7 +42,12 @@ export default async function SalesHistoryPage({
   if (from) query = query.gte('created_at', `${from}T00:00:00`)
   if (to) query = query.lte('created_at', `${to}T23:59:59`)
 
-  const { data } = await query
+  const { data, error } = await query
+
+  if (error) {
+    return <p className="text-sm text-red-600">Error loading sales: {error.message}</p>
+  }
+
   const sales = (data as unknown as Sale[]) || []
 
   // Exclude voided sales from total revenue
@@ -135,15 +141,20 @@ export default async function SalesHistoryPage({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Link href={`/dashboard/sales/${s.id}`} className="text-emerald-600 hover:underline">
-                    View
+                  <Link 
+                    href={`/dashboard/sales/${s.id}`} 
+                    className="text-emerald-600 hover:text-emerald-700" 
+                    title="View"
+                  >
+                    <Eye size={16} />
                   </Link>
                 </td>
               </tr>
             ))}
             {sales.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-neutral-400">
+                <td colSpan={8} className="px-4 py-12 text-center text-neutral-400">
+                  <ReceiptText size={28} className="mx-auto mb-2 text-neutral-300" />
                   No sales in this range.
                 </td>
               </tr>

@@ -28,12 +28,12 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
   const { data: sale } = await supabase
     .from('sales')
     .select(
-      `
-      id, sale_number, created_at, subtotal, discount, total,
-      cash_amount, card_amount, transfer_amount, status, void_reason,
-      profiles ( full_name ),
-      customers ( name, company_or_store, phone )
-    `
+   `
+   id, sale_number, created_at, subtotal, discount, total,
+   cash_amount, card_amount, transfer_amount, payment_method,
+   profiles!sales_cashier_id_fkey ( full_name ),
+   customers ( name, company_or_store, phone )
+     `
     )
     .eq('id', id)
     .single()

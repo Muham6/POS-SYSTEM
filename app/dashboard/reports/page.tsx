@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import SalesTrendChart from '@/components/sales-trend-chart'
 
 type LowStockProduct = {
   id: string
@@ -165,6 +166,14 @@ export default async function ReportsPage() {
           <p className="mt-1 text-xs text-neutral-400">
             Today: ₦{Number(todayProfitRow?.profit || 0).toLocaleString()} · approximate
           </p>
+        </div>
+      </div>
+
+      {/* New Sales Trend Chart Section */}
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Last 7 days</h2>
+        <div className="mt-3">
+          <SalesTrendChart data={rows} />
         </div>
       </div>
 

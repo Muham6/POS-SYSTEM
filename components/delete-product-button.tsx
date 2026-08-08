@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Trash2 } from 'lucide-react'  // Add this import
 
 export default function DeleteProductButton({
   productId,
@@ -32,7 +33,6 @@ export default function DeleteProductButton({
       return
     }
 
-    // Re-check the admin's password before allowing the delete
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password,
@@ -65,9 +65,10 @@ export default function DeleteProductButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-red-600 hover:underline"
+        className="text-red-600 hover:text-red-700"  // Changed from hover:underline
+        title="Delete"  // Added title
       >
-        Delete
+        <Trash2 size={16} />  {/* Replaced text with icon */}
       </button>
 
       {open && (

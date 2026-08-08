@@ -47,6 +47,15 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file (PNG, JPG, etc).')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be under 2MB.')
+      return
+    }
+
     setUploading(true)
     setError('')
 
@@ -66,6 +75,10 @@ export default function SettingsPage() {
     const { data: publicUrl } = supabase.storage.from('store-assets').getPublicUrl(path)
     setForm((f) => ({ ...f, logo_url: publicUrl.publicUrl }))
     setUploading(false)
+  }
+
+  function handleRemoveLogo() {
+    setForm((f) => ({ ...f, logo_url: '' }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -124,8 +137,17 @@ export default function SettingsPage() {
                 disabled={uploading}
                 className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
               >
-                {uploading ? 'Uploading…' : 'Upload logo'}
+                {uploading ? 'Uploading…' : form.logo_url ? 'Replace logo' : 'Upload logo'}
               </button>
+              {form.logo_url && (
+                <button
+                  type="button"
+                  onClick={handleRemoveLogo}
+                  className="text-sm text-red-500 hover:underline"
+                >
+                  Remove
+                </button>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { PackageSearch } from 'lucide-react'
 
 type Movement = {
   id: string
@@ -47,11 +48,15 @@ export default async function StockHistoryPage({
   searchParams: Promise<{
     product?: string
     type?: string
+    from?: string
+    to?: string
   }>
 }) {
   const {
     product: productId,
     type: searchParamsType,
+    from,
+    to,
   } = await searchParams
 
   const supabase = await createClient()
@@ -59,7 +64,7 @@ export default async function StockHistoryPage({
   let rows: Movement[] = []
 
   if (productId) {
-    const { data: movements } = await supabase
+    let query = supabase
       .from('stock_movements')
       .select(
         `
@@ -81,6 +86,11 @@ export default async function StockHistoryPage({
       `
       )
       .eq('product_id', productId)
+    
+    if (from) query = query.gte('created_at', `${from}T00:00:00`)
+    if (to) query = query.lte('created_at', `${to}T23:59:59`)
+    
+    const { data: movements } = await query
       .order('created_at', { ascending: false })
       .limit(200)
 
@@ -98,11 +108,11 @@ export default async function StockHistoryPage({
       performed_by_role: m.profiles?.role || null,
     }))
   } else {
-    const { data: movements } = await supabase
-      .from('stock_movement_log')
-      .select('*')
-      .limit(200)
-
+    let query = supabase.from('stock_movement_log').select('*')
+    if (from) query = query.gte('created_at', `${from}T00:00:00`)
+    if (to) query = query.lte('created_at', `${to}T23:59:59`)
+    
+    const { data: movements } = await query.limit(200)
     rows = (movements as Movement[]) || []
   }
 
@@ -136,13 +146,12 @@ export default async function StockHistoryPage({
 
         <div className="flex items-center gap-3">
           <a
-            href={`/api/stock-history-csv${
-              productId ? `?product=${productId}` : ''
-            }${
-              searchParamsType && searchParamsType !== 'all'
-                ? `${productId ? '&' : '?'}type=${searchParamsType}`
-                : ''
-            }`}
+            href={`/api/stock-history-csv?${new URLSearchParams({
+              ...(productId && { product: productId }),
+              ...(searchParamsType && searchParamsType !== 'all' && { type: searchParamsType }),
+              ...(from && { from }),
+              ...(to && { to }),
+            }).toString()}`}
             className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
           >
             Download CSV
@@ -176,6 +185,43 @@ export default async function StockHistoryPage({
           </Link>
         ))}
       </div>
+
+      <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+        {productId && <input type="hidden" name="product" value={productId} />}
+        {searchParamsType && <input type="hidden" name="type" value={searchParamsType} />}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">From</label>
+          <input
+            type="date"
+            name="from"
+            defaultValue={from}
+            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">To</label>
+          <input
+            type="date"
+            name="to"
+            defaultValue={to}
+            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          />
+        </div>
+        <button type="submit" className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600">
+          Filter dates
+        </button>
+        {from || to ? (
+          <a 
+            href={`/dashboard/products/stock-history?${new URLSearchParams({
+              ...(productId && { product: productId }),
+              ...(searchParamsType && searchParamsType !== 'all' && { type: searchParamsType }),
+            }).toString()}`}
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+          >
+            Clear
+          </a>
+        ) : null}
+      </form>
 
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
         <table className="w-full text-sm">
@@ -260,9 +306,10 @@ export default async function StockHistoryPage({
               <tr>
                 <td
                   colSpan={productId ? 6 : 7}
-                  className="px-4 py-8 text-center text-neutral-400"
+                  className="px-4 py-12 text-center text-neutral-400"
                 >
-                  No stock movements found.
+                  <PackageSearch size={28} className="mx-auto mb-2 text-neutral-300" />
+                  No stock movements yet.
                 </td>
               </tr>
             )}

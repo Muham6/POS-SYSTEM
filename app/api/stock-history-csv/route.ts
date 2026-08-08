@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const productId = searchParams.get('product')
   const type = searchParams.get('type')
+  const from = searchParams.get('from')
+  const to = searchParams.get('to')
 
   const supabase = await createClient()
 
@@ -25,6 +27,8 @@ export async function GET(request: NextRequest) {
 
   if (productId) query = query.eq('product_id', productId)
   if (type && type !== 'all') query = query.eq('movement_type', type)
+  if (from) query = query.gte('created_at', `${from}T00:00:00`)
+  if (to) query = query.lte('created_at', `${to}T23:59:59`)
 
   const { data, error } = await query
 

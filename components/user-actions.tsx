@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { KeyRound, UserX, UserCheck } from 'lucide-react'
 
 export default function UserActions({
   userId,
@@ -20,7 +21,7 @@ export default function UserActions({
   const [newPassword, setNewPassword] = useState('')
   const [error, setError] = useState('')
   const [resetSuccess, setResetSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false) // Added state for password masking
+  const [showPassword, setShowPassword] = useState(false)
 
   async function toggleActive() {
     if (isSelf) return
@@ -59,7 +60,7 @@ export default function UserActions({
     setNewPassword('')
     setError('')
     setResetSuccess(false)
-    setShowPassword(false) // Reset password visibility when closing
+    setShowPassword(false)
   }
 
   if (isSelf) {
@@ -68,15 +69,20 @@ export default function UserActions({
 
   return (
     <div className="flex items-center justify-end gap-3">
-      <button onClick={() => setShowReset(true)} className="text-xs text-neutral-500 hover:underline">
-        Reset password
+      <button 
+        onClick={() => setShowReset(true)} 
+        className="text-neutral-500 hover:text-neutral-700" 
+        title="Reset password"
+      >
+        <KeyRound size={16} />
       </button>
       <button
         onClick={toggleActive}
         disabled={loading}
-        className={`text-xs hover:underline ${isActive ? 'text-red-500' : 'text-emerald-600'}`}
+        className={isActive ? 'text-red-500 hover:text-red-700' : 'text-emerald-600 hover:text-emerald-700'}
+        title={isActive ? 'Deactivate' : 'Reactivate'}
       >
-        {isActive ? 'Deactivate' : 'Reactivate'}
+        {isActive ? <UserX size={16} /> : <UserCheck size={16} />}
       </button>
 
       {showReset && (

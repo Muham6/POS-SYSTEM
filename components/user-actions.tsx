@@ -64,14 +64,14 @@ export default function UserActions({
   }
 
   if (isSelf) {
-    return <span className="text-xs text-neutral-400">—</span>
+    return <span className="text-xs text-neutral-400 dark:text-neutral-500">—</span>
   }
 
   return (
     <div className="flex items-center justify-end gap-3">
-      <button 
-        onClick={() => setShowReset(true)} 
-        className="text-neutral-500 hover:text-neutral-700" 
+      <button
+        onClick={() => setShowReset(true)}
+        className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300"
         title="Reset password"
       >
         <KeyRound size={16} />
@@ -79,7 +79,7 @@ export default function UserActions({
       <button
         onClick={toggleActive}
         disabled={loading}
-        className={isActive ? 'text-red-500 hover:text-red-700' : 'text-emerald-600 hover:text-emerald-700'}
+        className={isActive ? 'text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300' : 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300'}
         title={isActive ? 'Deactivate' : 'Reactivate'}
       >
         {isActive ? <UserX size={16} /> : <UserCheck size={16} />}
@@ -87,14 +87,14 @@ export default function UserActions({
 
       {showReset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-900 dark:shadow-none">
             {resetSuccess ? (
               <>
-                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-600">
+                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
                   ✓
                 </div>
-                <h3 className="text-center text-lg font-semibold text-neutral-900">Password reset</h3>
-                <p className="mt-2 text-center text-sm text-neutral-500">
+                <h3 className="text-center text-lg font-semibold text-neutral-900 dark:text-neutral-100">Password reset</h3>
+                <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                   Share the new password with them directly — they can sign in with it right away.
                 </p>
                 <button
@@ -106,9 +106,9 @@ export default function UserActions({
               </>
             ) : (
               <>
-                <h3 className="text-lg font-semibold text-neutral-900">Reset password</h3>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Reset password</h3>
                 {error && (
-                  <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+                  <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                     {error}
                   </p>
                 )}
@@ -120,18 +120,18 @@ export default function UserActions({
                     placeholder="New password"
                     required
                     minLength={6}
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 pr-14 text-sm outline-none focus:border-emerald-500"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 pr-14 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-500 hover:text-emerald-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-500 hover:text-emerald-600 dark:text-neutral-400 dark:hover:text-emerald-400"
                   >
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
                 <div className="mt-4 flex justify-end gap-3">
-                  <button onClick={closeResetModal} className="rounded-lg px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100">
+                  <button onClick={closeResetModal} className="rounded-lg px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800">
                     Cancel
                   </button>
                   <button

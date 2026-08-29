@@ -65,7 +65,7 @@ export default function DeleteProductButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-red-600 hover:text-red-700"  // Changed from hover:underline
+        className="text-red-600 hover:text-red-700 dark:text-red-300"  // Changed from hover:underline
         title="Delete"  // Added title
       >
         <Trash2 size={16} />  {/* Replaced text with icon */}
@@ -73,10 +73,10 @@ export default function DeleteProductButton({
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-neutral-900">Delete product</h3>
-            <p className="mt-1 text-sm text-neutral-500">
-              This will remove <span className="font-medium text-neutral-800">{productName}</span> from
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-900 dark:shadow-none">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Delete product</h3>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              This will remove <span className="font-medium text-neutral-800 dark:text-neutral-200">{productName}</span> from
               the active product list. Confirm your admin password to continue.
             </p>
 
@@ -85,10 +85,10 @@ export default function DeleteProductButton({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Your password"
-              className="mt-4 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-4 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
 
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-red-600 dark:text-red-300">{error}</p>}
 
             <div className="mt-5 flex justify-end gap-3">
               <button
@@ -97,7 +97,7 @@ export default function DeleteProductButton({
                   setPassword('')
                   setError('')
                 }}
-                className="rounded-lg px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                className="rounded-lg px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               >
                 Cancel
               </button>

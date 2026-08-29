@@ -102,32 +102,32 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading settings…</p>
+    return <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading settings…</p>
   }
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-neutral-900">Store Settings</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Store Settings</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
           {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
           )}
           {success && (
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
               {success}
             </p>
           )}
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Logo</label>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Logo</label>
             <div className="mt-2 flex items-center gap-4">
               {form.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={form.logo_url} alt="Logo" className="h-14 w-14 rounded-lg border border-neutral-200 object-cover" />
+                <img src={form.logo_url} alt="Logo" className="h-14 w-14 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800" />
               ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-neutral-300">
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-neutral-300 dark:border-neutral-700 dark:text-neutral-600">
                   <Upload size={20} />
                 </div>
               )}
@@ -135,7 +135,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+                className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
               >
                 {uploading ? 'Uploading…' : form.logo_url ? 'Replace logo' : 'Upload logo'}
               </button>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleRemoveLogo}
-                  className="text-sm text-red-500 hover:underline"
+                  className="text-sm text-red-500 hover:underline dark:text-red-400"
                 >
                   Remove
                 </button>
@@ -159,53 +159,53 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Store name</label>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Store name</label>
             <input
               value={form.store_name}
               onChange={(e) => setForm({ ...form, store_name: e.target.value })}
               required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Address</label>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Address</label>
             <input
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Phone number</label>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Phone number</label>
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Thank-you message
             </label>
             <input
               value={form.footer_message}
               onChange={(e) => setForm({ ...form, footer_message: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Return policy
             </label>
             <textarea
               value={form.return_policy}
               onChange={(e) => setForm({ ...form, return_policy: e.target.value })}
               rows={2}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
 
@@ -219,7 +219,7 @@ export default function SettingsPage() {
         </form>
 
         <div>
-          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Live receipt preview
           </p>
           <Receipt

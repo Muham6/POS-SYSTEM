@@ -37,10 +37,10 @@ export default async function DashboardOverview() {
     <div>
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {profile?.full_name ? `Hi, ${profile.full_name.split(' ')[0]}` : 'Welcome'}
           </h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             {new Date().toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
@@ -56,56 +56,56 @@ export default async function DashboardOverview() {
       {isAdmin && (
         <>
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <div className="rounded-xl border border-neutral-200 bg-white p-5">
-              <div className="flex items-center gap-2 text-neutral-500">
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
                 <Wallet size={16} />
                 <p className="text-xs uppercase tracking-wider">Today</p>
               </div>
-              <p className="mt-2 text-xl font-semibold text-neutral-900 sm:text-2xl">
+              <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100 sm:text-2xl">
                 ₦{todayTotal.toLocaleString()}
               </p>
-              <p className="mt-1 text-xs text-neutral-400">{todayCount} sale{todayCount === 1 ? '' : 's'}</p>
+              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{todayCount} sale{todayCount === 1 ? '' : 's'}</p>
             </div>
 
-            <div className="rounded-xl border border-neutral-200 bg-white p-5">
-              <div className="flex items-center gap-2 text-neutral-500">
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
                 <TrendingUp size={16} />
                 <p className="text-xs uppercase tracking-wider">Profit today</p>
               </div>
-              <p className="mt-2 text-xl font-semibold text-neutral-900 sm:text-2xl">
+              <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100 sm:text-2xl">
                 ₦{todayProfit.toLocaleString()}
               </p>
-              <p className="mt-1 text-xs text-neutral-400">approximate</p>
+              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">approximate</p>
             </div>
 
             <Link
               href="/dashboard/products"
-              className="rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-red-300"
+              className="rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-red-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-red-800"
             >
-              <div className={`flex items-center gap-2 ${lowStockCount > 0 ? 'text-red-500' : 'text-neutral-500'}`}>
+              <div className={`flex items-center gap-2 ${lowStockCount > 0 ? 'text-red-500 dark:text-red-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
                 <AlertTriangle size={16} />
                 <p className="text-xs uppercase tracking-wider">Low stock</p>
               </div>
-              <p className={`mt-2 text-xl font-semibold sm:text-2xl ${lowStockCount > 0 ? 'text-red-600' : 'text-neutral-900'}`}>
+              <p className={`mt-2 text-xl font-semibold sm:text-2xl ${lowStockCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
                 {lowStockCount}
               </p>
-              <p className="mt-1 text-xs text-neutral-400">tap to view</p>
+              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">tap to view</p>
             </Link>
 
             <Link
               href="/dashboard/reports"
-              className="rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-emerald-300"
+              className="rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-emerald-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-emerald-800"
             >
-              <div className="flex items-center gap-2 text-neutral-500">
+              <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
                 <TrendingUp size={16} />
                 <p className="text-xs uppercase tracking-wider">Full reports</p>
               </div>
-              <p className="mt-3 text-sm font-medium text-emerald-600">View trends →</p>
+              <p className="mt-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">View trends →</p>
             </Link>
           </div>
 
-          <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Last 7 days</h2>
+          <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Last 7 days</h2>
             <div className="mt-3">
               <SalesTrendChart data={trendData} />
             </div>
@@ -114,9 +114,9 @@ export default async function DashboardOverview() {
       )}
 
       {!isAdmin && (
-        <div className="mt-8 rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
-          <ShoppingCart size={28} className="mx-auto mb-3 text-neutral-300" />
-          <p className="text-sm text-neutral-500">Ready when you are — tap New Sale above to get started.</p>
+        <div className="mt-8 rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center dark:border-neutral-700 dark:bg-neutral-900">
+          <ShoppingCart size={28} className="mx-auto mb-3 text-neutral-300 dark:text-neutral-600" />
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Ready when you are — tap New Sale above to get started.</p>
         </div>
       )}
     </div>

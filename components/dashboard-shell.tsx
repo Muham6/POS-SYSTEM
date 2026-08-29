@@ -108,7 +108,7 @@ export default function DashboardShell({
       />
       <HelpAssistant />
 
-      <div className="flex flex-1 bg-neutral-50 text-neutral-900">
+      <div className="flex flex-1 bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -117,7 +117,7 @@ export default function DashboardShell({
         )}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col justify-between border-r border-neutral-200 bg-white p-5 transition-transform lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col justify-between border-r border-neutral-200 bg-white p-5 transition-transform dark:border-neutral-800 dark:bg-neutral-900 lg:static lg:translate-x-0 ${
             sidebarOpen
               ? 'translate-x-0'
               : '-translate-x-full'
@@ -138,14 +138,14 @@ export default function DashboardShell({
                   <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500" />
                 )}
 
-                <span className="truncate text-sm font-semibold text-neutral-800">
+                <span className="truncate text-sm font-semibold text-neutral-800 dark:text-neutral-200">
                   {storeName}
                 </span>
               </div>
 
               <button
                 onClick={() => setMenuOpen(false)}
-                className="text-neutral-400 lg:hidden"
+                className="text-neutral-400 dark:text-neutral-500 lg:hidden"
                 aria-label="Close menu"
               >
                 <X size={20} />
@@ -166,8 +166,8 @@ export default function DashboardShell({
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                       active
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'text-neutral-700 hover:bg-neutral-100'
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                        : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
                     }`}
                   >
                     <Icon size={18} />
@@ -178,30 +178,30 @@ export default function DashboardShell({
             </nav>
           </div>
 
-          <div className="border-t border-neutral-200 pt-4">
-            <p className="text-sm font-medium text-neutral-800">
+          <div className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
+            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
               {fullName || 'Unnamed user'}
             </p>
 
-            <span className="mt-1 inline-block rounded-full bg-neutral-900 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white">
+            <span className="mt-1 inline-block rounded-full bg-neutral-900 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white dark:bg-neutral-100 dark:text-neutral-900">
               {role}
             </span>
           </div>
         </aside>
 
         <div className="flex flex-1 flex-col pb-16 lg:pb-0">
-          <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-4 sm:px-8">
+          <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
             <button
               onClick={() => setMenuOpen(true)}
-              className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 lg:hidden"
+              className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 lg:hidden"
               aria-label="Open menu"
             >
               <Menu size={22} />
             </button>
 
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Signed in as{' '}
-              <span className="font-medium text-neutral-800">
+              <span className="font-medium text-neutral-800 dark:text-neutral-200">
                 {role}
               </span>
             </p>
@@ -209,7 +209,7 @@ export default function DashboardShell({
             <div className="flex items-center gap-3">
               <button
                 onClick={startTour}
-                className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+                className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
                 aria-label="Take the tour again"
                 title="Take the tour again"
               >
@@ -225,7 +225,7 @@ export default function DashboardShell({
         </div>
 
         {/* Mobile bottom tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-neutral-200 bg-white lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 lg:hidden">
           {mobileTabs.map((link) => {
             const active = pathname === link.href
             const Icon =
@@ -237,8 +237,8 @@ export default function DashboardShell({
                 href={link.href}
                 className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
                   active
-                    ? 'text-emerald-600'
-                    : 'text-neutral-400'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-neutral-400 dark:text-neutral-500'
                 }`}
               >
                 <Icon size={20} />

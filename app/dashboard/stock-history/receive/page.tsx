@@ -133,28 +133,28 @@ export default function ReceiveStockPage() {
       <div className="mb-6">
         <Link
           href="/dashboard/stock-history"
-          className="text-sm text-neutral-500 hover:underline"
+          className="text-sm text-neutral-500 hover:underline dark:text-neutral-400"
         >
           ← Stock History
         </Link>
 
-        <h1 className="mt-2 text-2xl font-semibold text-neutral-900">
+        <h1 className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
           Receive Stock
         </h1>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6"
+        className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
       >
         {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
             {error}
           </p>
         )}
 
         {success && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
             {success}
           </p>
         )}
@@ -176,14 +176,14 @@ export default function ReceiveStockPage() {
             return (
               <div
                 key={index}
-                className="flex items-start gap-2 rounded-lg border border-neutral-200 p-3"
+                className="flex items-start gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800"
               >
                 <div className="flex-1">
                   {row.product ? (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-800">
+                      <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
                         {row.product.name}{' '}
-                        <span className="text-neutral-400">
+                        <span className="text-neutral-400 dark:text-neutral-500">
                           · {row.product.stock_quantity} in stock
                         </span>
                       </span>
@@ -196,7 +196,7 @@ export default function ReceiveStockPage() {
                             search: '',
                           })
                         }
-                        className="text-xs text-emerald-600 hover:underline"
+                        className="text-xs text-emerald-600 hover:underline dark:text-emerald-400"
                       >
                         change
                       </button>
@@ -211,11 +211,11 @@ export default function ReceiveStockPage() {
                           })
                         }
                         placeholder="Search product…"
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                       />
 
                       {row.search && (
-                        <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-neutral-200">
+                        <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
                           {filtered.map((p) => (
                             <button
                               key={p.id}
@@ -226,18 +226,18 @@ export default function ReceiveStockPage() {
                                   search: '',
                                 })
                               }
-                              className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                              className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
                             >
                               <span>{p.name}</span>
 
-                              <span className="text-neutral-400">
+                              <span className="text-neutral-400 dark:text-neutral-500">
                                 {p.stock_quantity} in stock
                               </span>
                             </button>
                           ))}
 
                           {filtered.length === 0 && (
-                            <p className="px-3 py-2 text-sm text-neutral-400">
+                            <p className="px-3 py-2 text-sm text-neutral-400 dark:text-neutral-500">
                               No match.
                             </p>
                           )}
@@ -257,14 +257,14 @@ export default function ReceiveStockPage() {
                     })
                   }
                   placeholder="Qty"
-                  className="w-24 rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="w-24 rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
 
                 {rows.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeRow(index)}
-                    className="mt-2 text-xs text-red-500 hover:underline"
+                    className="mt-2 text-xs text-red-500 hover:underline dark:text-red-400"
                   >
                     remove
                   </button>
@@ -277,21 +277,21 @@ export default function ReceiveStockPage() {
         <button
           type="button"
           onClick={addRow}
-          className="text-sm text-emerald-600 hover:underline"
+          className="text-sm text-emerald-600 hover:underline dark:text-emerald-400"
         >
           + Add another product
         </button>
 
         {/* Supplier */}
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Supplier (optional)
           </label>
 
           <select
             value={supplierId}
             onChange={(e) => setSupplierId(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           >
             <option value="">No supplier</option>
 
@@ -305,7 +305,7 @@ export default function ReceiveStockPage() {
 
         {/* Note */}
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Note for this delivery (optional)
           </label>
 
@@ -313,7 +313,7 @@ export default function ReceiveStockPage() {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g. invoice number — applies to all items above"
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 

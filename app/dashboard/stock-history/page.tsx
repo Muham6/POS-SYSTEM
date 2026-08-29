@@ -48,12 +48,12 @@ type RawStockMovement = {
 }
 
 const typeStyles: Record<string, string> = {
-  restock: 'bg-emerald-50 text-emerald-700',
-  sale: 'bg-blue-50 text-blue-700',
-  return: 'bg-amber-50 text-amber-700',
-  adjustment: 'bg-amber-50 text-amber-700',
-  stock_take: 'bg-purple-50 text-purple-700',
-  damaged: 'bg-red-50 text-red-700',
+  restock: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+  sale: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
+  return: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+  adjustment: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+  stock_take: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
+  damaged: 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
 }
 
 export default async function StockHistoryPage({
@@ -186,15 +186,15 @@ export default async function StockHistoryPage({
         <div>
           <Link
             href="/dashboard"
-            className="text-sm text-neutral-500 hover:underline"
+            className="text-sm text-neutral-500 hover:underline dark:text-neutral-400"
           >
             ← Overview
           </Link>
 
-          <h1 className="mt-2 text-2xl font-semibold text-neutral-900">
+          <h1 className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             Stock History{' '}
             {productId && productName && (
-              <span className="text-neutral-400">
+              <span className="text-neutral-400 dark:text-neutral-500">
                 · {productName}
               </span>
             )}
@@ -210,14 +210,14 @@ export default async function StockHistoryPage({
               ...(to && { to }),
               ...(batch && { batch }),
             }).toString()}`}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             Download CSV
           </a>
 
           <Link
             href="/dashboard/stock-history/stock-take"
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             Stock Take
           </Link>
@@ -232,7 +232,7 @@ export default async function StockHistoryPage({
       </div>
 
       {queryError && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Couldn&apos;t load stock history: {queryError}
         </p>
       )}
@@ -265,7 +265,7 @@ export default async function StockHistoryPage({
               className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${
                 (type || 'all') === t
                   ? 'bg-emerald-500 text-white'
-                  : 'border border-neutral-300 text-neutral-600 hover:bg-neutral-50'
+                  : 'border border-neutral-300 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800'
               }`}
             >
               {t}
@@ -275,7 +275,7 @@ export default async function StockHistoryPage({
       </div>
 
       {/* Date + batch filters */}
-      <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+      <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         {productId && (
           <input
             type="hidden"
@@ -293,7 +293,7 @@ export default async function StockHistoryPage({
         )}
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             From
           </label>
 
@@ -301,12 +301,12 @@ export default async function StockHistoryPage({
             type="date"
             name="from"
             defaultValue={from}
-            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             To
           </label>
 
@@ -314,12 +314,12 @@ export default async function StockHistoryPage({
             type="date"
             name="to"
             defaultValue={to}
-            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div className="flex-1">
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Delivery reference
           </label>
 
@@ -328,7 +328,7 @@ export default async function StockHistoryPage({
             name="batch"
             defaultValue={batch}
             placeholder="e.g. RCV-20260810-a1b2c3"
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
@@ -341,10 +341,10 @@ export default async function StockHistoryPage({
       </form>
 
       {/* Stock history table */}
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <table className="w-full min-w-[800px] text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500">
+            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-400">
               <th className="px-4 py-3">Date</th>
 
               {!productId && (
@@ -379,9 +379,9 @@ export default async function StockHistoryPage({
             {rows.map((m) => (
               <tr
                 key={m.id}
-                className="border-b border-neutral-100 last:border-0"
+                className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
               >
-                <td className="whitespace-nowrap px-4 py-3 text-neutral-500">
+                <td className="whitespace-nowrap px-4 py-3 text-neutral-500 dark:text-neutral-400">
                   {new Date(m.created_at).toLocaleString(
                     'en-NG',
                     {
@@ -392,11 +392,11 @@ export default async function StockHistoryPage({
                 </td>
 
                 {!productId && (
-                  <td className="px-4 py-3 font-medium text-neutral-900">
+                  <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
                     {m.product_name}
 
                     {m.sku && (
-                      <span className="ml-1 text-xs text-neutral-400">
+                      <span className="ml-1 text-xs text-neutral-400 dark:text-neutral-500">
                         ({m.sku})
                       </span>
                     )}
@@ -416,10 +416,10 @@ export default async function StockHistoryPage({
                 <td
                   className={`px-4 py-3 text-right font-medium ${
                     m.quantity_change > 0
-                      ? 'text-emerald-600'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : m.quantity_change < 0
-                        ? 'text-red-600'
-                        : 'text-neutral-400'
+                        ? 'text-red-600 dark:text-red-300'
+                        : 'text-neutral-400 dark:text-neutral-500'
                   }`}
                 >
                   {m.quantity_change > 0
@@ -427,25 +427,25 @@ export default async function StockHistoryPage({
                     : m.quantity_change}
                 </td>
 
-                <td className="px-4 py-3 text-right text-neutral-900">
+                <td className="px-4 py-3 text-right text-neutral-900 dark:text-neutral-100">
                   {m.new_stock}
                 </td>
 
-                <td className="px-4 py-3 text-neutral-500">
+                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
                   {m.performed_by_name || '—'}
 
                   {m.performed_by_role && (
-                    <span className="ml-1 text-xs text-neutral-400">
+                    <span className="ml-1 text-xs text-neutral-400 dark:text-neutral-500">
                       ({m.performed_by_role})
                     </span>
                   )}
                 </td>
 
-                <td className="px-4 py-3 font-mono text-xs text-neutral-400">
+                <td className="px-4 py-3 font-mono text-xs text-neutral-400 dark:text-neutral-500">
                   {m.batch_reference || '—'}
                 </td>
 
-                <td className="px-4 py-3 text-neutral-400">
+                <td className="px-4 py-3 text-neutral-400 dark:text-neutral-500">
                   {m.note || '—'}
                 </td>
               </tr>
@@ -455,7 +455,7 @@ export default async function StockHistoryPage({
               <tr>
                 <td
                   colSpan={productId ? 7 : 8}
-                  className="px-4 py-12 text-center text-neutral-400"
+                  className="px-4 py-12 text-center text-neutral-400 dark:text-neutral-500"
                 >
                   No stock movements yet.
                 </td>

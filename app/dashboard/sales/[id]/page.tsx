@@ -46,11 +46,11 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
   const { data: storeSettings } = await supabase.from('store_settings').select('*').eq('id', 1).single()
 
   if (saleError) {
-    return <p className="text-sm text-red-600">Error loading sale: {saleError.message}</p>
+    return <p className="text-sm text-red-600 dark:text-red-300">Error loading sale: {saleError.message}</p>
   }
 
   if (!sale) {
-    return <p className="text-sm text-neutral-500">Sale not found.</p>
+    return <p className="text-sm text-neutral-500 dark:text-neutral-400">Sale not found.</p>
   }
 
   const s = sale as unknown as SaleDetail
@@ -59,13 +59,13 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
   return (
     <div className="max-w-lg">
       <div className="mb-4 flex items-center justify-between">
-        <Link href="/dashboard/sales" className="text-sm text-neutral-500 hover:underline">
+        <Link href="/dashboard/sales" className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
           ← Sales History
         </Link>
         {profile?.role === 'admin' && !isVoided && <VoidSaleButton saleId={s.id} />}
       </div>
 
-      <div className="mb-4 rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
+      <div className="mb-4 rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
         <p>Cashier: {s.profiles?.full_name || '—'}</p>
         {s.customers && (
           <p className="mt-1">
@@ -73,7 +73,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
             {s.customers.phone && ` · ${s.customers.phone}`}
           </p>
         )}
-        {isVoided && s.void_reason && <p className="mt-2 text-red-600">Void reason: {s.void_reason}</p>}
+        {isVoided && s.void_reason && <p className="mt-2 text-red-600 dark:text-red-300">Void reason: {s.void_reason}</p>}
       </div>
 
       <Receipt

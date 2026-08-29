@@ -114,79 +114,79 @@ export default async function ReportsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-neutral-900">
+      <h1 className="mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
         Reports
       </h1>
 
       {loadError && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Some report data failed to load: {loadError.message}
         </p>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-xs uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Today
           </p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">
+          <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             ₦{Number(todayRow?.total_revenue || 0).toLocaleString()}
           </p>
-          <p className="mt-1 text-sm text-neutral-400">
+          <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
             {todayRow?.num_sales || 0} sales
           </p>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-xs uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Last 7 days
           </p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">
+          <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             ₦{weekTotal.toLocaleString()}
           </p>
-          <p className="mt-1 text-sm text-neutral-400">
+          <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
             {weekSales} sales
           </p>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-xs uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Low stock items
           </p>
-          <p className="mt-2 text-2xl font-semibold text-red-600">
+          <p className="mt-2 text-2xl font-semibold text-red-600 dark:text-red-300">
             {(lowStock || []).length}
           </p>
           <Link
             href="/dashboard/products"
-            className="mt-1 inline-block text-sm text-emerald-600 hover:underline"
+            className="mt-1 inline-block text-sm text-emerald-600 hover:underline dark:text-emerald-400"
           >
             View products →
           </Link>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <p className="text-xs uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Profit (7 days)
           </p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900">
+          <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             ₦{weekProfit.toLocaleString()}
           </p>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
             Today: ₦{Number(todayProfitRow?.profit || 0).toLocaleString()} · approximate
           </p>
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Last 7 days</h2>
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Last 7 days</h2>
         <div className="mt-3">
           <SalesTrendChart data={rows} />
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Top selling products
           </h2>
 
@@ -196,25 +196,25 @@ export default async function ReportsPage() {
                 key={name}
                 className="flex justify-between text-sm"
               >
-                <span className="text-neutral-700">
+                <span className="text-neutral-700 dark:text-neutral-300">
                   {name}
                 </span>
-                <span className="font-medium text-neutral-900">
+                <span className="font-medium text-neutral-900 dark:text-neutral-100">
                   {qty} sold
                 </span>
               </div>
             ))}
 
             {topFive.length === 0 && (
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-neutral-400 dark:text-neutral-500">
                 No sales yet.
               </p>
             )}
           </div>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Low stock alerts
           </h2>
 
@@ -224,17 +224,17 @@ export default async function ReportsPage() {
                 key={p.id}
                 className="flex justify-between text-sm"
               >
-                <span className="text-neutral-700">
+                <span className="text-neutral-700 dark:text-neutral-300">
                   {p.name}
                 </span>
-                <span className="font-medium text-red-600">
+                <span className="font-medium text-red-600 dark:text-red-300">
                   {p.stock_quantity} left
                 </span>
               </div>
             ))}
 
             {(lowStock || []).length === 0 && (
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-neutral-400 dark:text-neutral-500">
                 Nothing low right now.
               </p>
             )}
@@ -243,70 +243,70 @@ export default async function ReportsPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Today by payment method
           </h2>
 
           <div className="mt-3 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 Cash
               </span>
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 ₦{todayPaymentTotals.cash.toLocaleString()}
               </span>
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 Card
               </span>
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 ₦{todayPaymentTotals.card.toLocaleString()}
               </span>
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 Transfer
               </span>
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 ₦{todayPaymentTotals.transfer.toLocaleString()}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Last 7 days by payment method
           </h2>
 
           <div className="mt-3 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 Cash
               </span>
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 ₦{paymentTotals.cash.toLocaleString()}
               </span>
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 Card
               </span>
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 ₦{paymentTotals.card.toLocaleString()}
               </span>
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 Transfer
               </span>
-              <span className="font-medium text-neutral-900">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 ₦{paymentTotals.transfer.toLocaleString()}
               </span>
             </div>

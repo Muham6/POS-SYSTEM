@@ -151,44 +151,44 @@ export default function NewProductPage() {
   return (
     <div className="max-w-lg">
       <div className="mb-6 flex items-center gap-3">
-        <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline">
+        <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
           ← Products
         </Link>
       </div>
 
-      <h1 className="mb-6 text-2xl font-semibold text-neutral-900">Add Product</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Add Product</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
         {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
         )}
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Product name
           </label>
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             SKU / barcode (optional)
           </label>
           <input
             value={form.sku}
             onChange={(e) => setForm({ ...form, sku: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Stock quantity (in base units)
             </label>
             <input
@@ -196,24 +196,24 @@ export default function NewProductPage() {
               value={form.stock_quantity}
               onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
               required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Low stock alert
             </label>
             <input
               type="number"
               value={form.low_stock_threshold}
               onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Cost price (optional)
           </label>
           <input
@@ -221,16 +221,16 @@ export default function NewProductPage() {
             step="0.01"
             value={form.cost_price}
             onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         {/* Base unit — required */}
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
             Base unit — required
           </p>
-          <p className="mt-1 text-xs text-emerald-600">
+          <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
             The smallest sellable unit (e.g. &quot;piece&quot;). Stock is always tracked in this unit.
           </p>
           <div className="mt-3 grid grid-cols-2 gap-3">
@@ -239,7 +239,7 @@ export default function NewProductPage() {
               onChange={(e) => setBaseUnitName(e.target.value)}
               placeholder="Unit name (e.g. piece)"
               required
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
             <input
               type="number"
@@ -248,7 +248,7 @@ export default function NewProductPage() {
               onChange={(e) => setBaseUnitPrice(e.target.value)}
               placeholder="Price per piece"
               required
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
         </div>
@@ -256,10 +256,10 @@ export default function NewProductPage() {
         {/* Extra units — optional */}
         <div>
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Other units sold (optional)
             </p>
-            <button type="button" onClick={addExtraUnit} className="text-xs text-emerald-600 hover:underline">
+            <button type="button" onClick={addExtraUnit} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">
               + Add unit (pack, carton, bag…)
             </button>
           </div>
@@ -270,14 +270,14 @@ export default function NewProductPage() {
                 value={unit.unit_name}
                 onChange={(e) => updateExtraUnit(index, { unit_name: e.target.value })}
                 placeholder="Name (carton)"
-                className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               />
               <input
                 type="number"
                 value={unit.conversion_to_base}
                 onChange={(e) => updateExtraUnit(index, { conversion_to_base: e.target.value })}
                 placeholder={`= how many ${baseUnitName || 'base units'}`}
-                className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               />
               <input
                 type="number"
@@ -285,19 +285,19 @@ export default function NewProductPage() {
                 value={unit.price}
                 onChange={(e) => updateExtraUnit(index, { price: e.target.value })}
                 placeholder="Price"
-                className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               />
               <button
                 type="button"
                 onClick={() => removeExtraUnit(index)}
-                className="text-xs text-red-500 hover:underline"
+                className="text-xs text-red-500 hover:underline dark:text-red-400"
               >
                 remove
               </button>
             </div>
           ))}
           {extraUnits.length === 0 && (
-            <p className="mt-2 text-xs text-neutral-400">
+            <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
               e.g. &quot;carton&quot; = 144 pieces at ₦18,000 — add as many as this product is sold in.
             </p>
           )}
@@ -305,14 +305,14 @@ export default function NewProductPage() {
 
         {/* Category */}
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Category</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Category</label>
           {showNewCategory ? (
             <div className="mt-1 flex gap-2">
               <input
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="New category name"
-                className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               />
               <button
                 type="button"
@@ -324,7 +324,7 @@ export default function NewProductPage() {
               <button
                 type="button"
                 onClick={() => setShowNewCategory(false)}
-                className="rounded-lg px-3 py-2 text-sm text-neutral-500 hover:bg-neutral-100"
+                className="rounded-lg px-3 py-2 text-sm text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               >
                 Cancel
               </button>
@@ -334,7 +334,7 @@ export default function NewProductPage() {
               <select
                 value={form.category_id}
                 onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               >
                 <option value="">No category</option>
                 {categories.map((c) => (
@@ -346,7 +346,7 @@ export default function NewProductPage() {
               <button
                 type="button"
                 onClick={() => setShowNewCategory(true)}
-                className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
+                className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
               >
                 + New
               </button>

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
-import { Receipt } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -48,64 +47,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Brand panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 p-12 lg:flex">
-        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-emerald-900/20 blur-3xl" />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
-        />
-
-        <div className="relative flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-white/15 backdrop-blur-sm">
-            {logoUrl ? (
-              <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-full w-full object-cover" />
-            ) : (
-              <Receipt size={18} className="text-white" />
-            )}
-          </span>
-          <span className="text-sm font-semibold tracking-wide text-white">{storeName}</span>
-        </div>
-
-        <div className="relative max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-50/80">Point of sale</p>
-          <h1 className="mt-4 text-4xl font-bold leading-[1.15] text-white sm:text-5xl">
-            Sell, track stock, and close the day with clean numbers.
-          </h1>
-          <p className="mt-5 text-sm text-emerald-50/80">
-            One screen for every sale, every shift, and everything on the shelf.
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-6 py-12 dark:bg-neutral-950">
+      <div className="w-full max-w-sm">
+        <div className="text-center">
+          {logoUrl && (
+            <div className="mx-auto mb-4 h-12 w-12 overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+              <Image src={logoUrl} alt={storeName} width={48} height={48} className="h-full w-full object-cover" />
+            </div>
+          )}
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">{storeName}</h1>
+          <p className="mt-1 text-xs font-medium uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
+            Point of sale
           </p>
         </div>
 
-        <p className="relative text-xs text-emerald-50/60">built by Muham</p>
-      </div>
+        <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm shadow-neutral-200/60 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none sm:p-7">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Sign in</h2>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Use the account set up for you.</p>
 
-      {/* Form panel */}
-      <div className="flex w-full items-center justify-center bg-neutral-50 px-6 lg:w-1/2 lg:bg-white">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-emerald-50">
-              {logoUrl ? (
-                <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-full w-full object-cover" />
-              ) : (
-                <Receipt size={18} className="text-emerald-600" />
-              )}
-            </span>
-            <span className="text-sm font-semibold tracking-wide text-neutral-800">{storeName}</span>
-          </div>
-
-          <h2 className="text-2xl font-semibold text-neutral-900">Sign in</h2>
-          <p className="mt-1 text-sm text-neutral-500">Use the account set up for you.</p>
-
-          <form onSubmit={handleSignIn} className="mt-8 space-y-5">
+          <form onSubmit={handleSignIn} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <label
+                htmlFor="email"
+                className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+              >
                 Email
               </label>
               <input
@@ -115,7 +80,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm text-neutral-900 outline-none transition focus:border-emerald-500"
+                className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 placeholder="you@shop.com"
               />
             </div>
@@ -123,7 +88,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold uppercase tracking-wider text-neutral-500"
+                className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
               >
                 Password
               </label>
@@ -135,7 +100,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 pr-16 text-sm text-neutral-900 outline-none transition focus:border-emerald-500"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 pr-16 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                   placeholder="••••••••"
                 />
                 <button
@@ -143,7 +108,7 @@ export default function LoginPage() {
                   onClick={() => setShowPassword((v) => !v)}
                   aria-pressed={showPassword}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium uppercase tracking-wider text-neutral-400 hover:text-emerald-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium uppercase tracking-wider text-neutral-400 hover:text-emerald-600 dark:text-neutral-500 dark:hover:text-emerald-400"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -151,7 +116,10 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              <p
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+              >
                 {error}
               </p>
             )}
@@ -165,6 +133,10 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
+
+        <p className="mt-6 text-center text-xs text-neutral-400 dark:text-neutral-600">
+          Built by <span className="font-medium text-neutral-500 dark:text-neutral-500">Muham</span>
+        </p>
       </div>
     </div>
   )

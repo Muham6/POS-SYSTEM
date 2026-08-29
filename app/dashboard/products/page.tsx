@@ -45,7 +45,7 @@ export default async function ProductsPage({
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-900">
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
           Products
         </h1>
 
@@ -65,25 +65,25 @@ export default async function ProductsPage({
       </div>
 
       {productsError && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Couldn&apos;t load products: {productsError.message}
         </p>
       )}
 
       {products.length === 0 && !productsError ? (
-        <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
-          <Package size={28} className="mx-auto mb-3 text-neutral-300" />
-          <p className="text-sm text-neutral-500">
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center dark:border-neutral-700 dark:bg-neutral-900">
+          <Package size={28} className="mx-auto mb-3 text-neutral-300 dark:text-neutral-600" />
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {category
               ? 'No products in this category yet.'
               : 'No products yet — add your first one to get started.'}
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500">
+              <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-400">
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">SKU</th>
                 <th className="px-4 py-3">Category</th>
@@ -101,23 +101,23 @@ export default async function ProductsPage({
                 return (
                   <tr
                     key={p.id}
-                    className={`border-b border-neutral-100 last:border-0 ${
-                      lowStock ? 'bg-red-50' : ''
+                    className={`border-b border-neutral-100 last:border-0 dark:border-neutral-800 ${
+                      lowStock ? 'bg-red-50 dark:bg-red-950/40' : ''
                     }`}
                   >
-                    <td className="px-4 py-3 font-medium text-neutral-900">
+                    <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
                       {p.name}
                     </td>
 
-                    <td className="px-4 py-3 text-neutral-500">
+                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
                       {p.sku || '—'}
                     </td>
 
-                    <td className="px-4 py-3 text-neutral-500">
+                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
                       {p.categories?.name || '—'}
                     </td>
 
-                    <td className="px-4 py-3 text-right text-neutral-900">
+                    <td className="px-4 py-3 text-right text-neutral-900 dark:text-neutral-100">
                       ₦{Number(p.price).toLocaleString()}
                     </td>
 
@@ -125,8 +125,8 @@ export default async function ProductsPage({
                       <span
                         className={
                           lowStock
-                            ? 'font-medium text-red-600'
-                            : 'text-neutral-900'
+                            ? 'font-medium text-red-600 dark:text-red-300'
+                            : 'text-neutral-900 dark:text-neutral-100'
                         }
                       >
                         {p.stock_quantity}
@@ -141,7 +141,7 @@ export default async function ProductsPage({
                       <div className="flex items-center justify-end gap-3">
                         <Link
                           href={`/dashboard/stock-history?product=${p.id}`}
-                          className="text-neutral-500 hover:text-neutral-700"
+                          className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300"
                           title="History"
                           aria-label={`View stock history for ${p.name}`}
                         >
@@ -150,7 +150,7 @@ export default async function ProductsPage({
 
                         <Link
                           href={`/dashboard/products/${p.id}/edit`}
-                          className="text-emerald-600 hover:text-emerald-700"
+                          className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
                           title="Edit"
                           aria-label={`Edit ${p.name}`}
                         >

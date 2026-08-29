@@ -203,11 +203,11 @@ export default function EditProductPage() {
   if (fetching) {
     return (
       <div className="max-w-lg">
-        <div className="h-4 w-20 animate-pulse rounded bg-neutral-200" />
-        <div className="mt-6 h-7 w-40 animate-pulse rounded bg-neutral-200" />
-        <div className="mt-6 space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
+        <div className="h-4 w-20 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="mt-6 h-7 w-40 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="mt-6 space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-9 animate-pulse rounded-lg bg-neutral-100" />
+            <div key={i} className="h-9 animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800" />
           ))}
         </div>
       </div>
@@ -218,11 +218,11 @@ export default function EditProductPage() {
     return (
       <div className="max-w-lg">
         <div className="mb-6 flex items-center gap-3">
-          <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline">
+          <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
             ← Products
           </Link>
         </div>
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Couldn&apos;t load this product: {loadError}
         </p>
       </div>
@@ -234,40 +234,40 @@ export default function EditProductPage() {
   return (
     <div className="max-w-lg">
       <div className="mb-6 flex items-center gap-3">
-        <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline">
+        <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
           ← Products
         </Link>
       </div>
 
-      <h1 className="mb-6 text-2xl font-semibold text-neutral-900">Edit Product</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Edit Product</h1>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Product name</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Product name</label>
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">SKU / barcode</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">SKU / barcode</label>
           <input
             value={form.sku}
             onChange={(e) => setForm({ ...form, sku: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Stock quantity (base units)
             </label>
             <input
@@ -275,56 +275,56 @@ export default function EditProductPage() {
               value={form.stock_quantity}
               onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
               required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
             {stockDelta !== 0 && (
-              <p className={`mt-1 text-xs ${stockDelta > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+              <p className={`mt-1 text-xs ${stockDelta > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {stockDelta > 0 ? `+${stockDelta}` : stockDelta} — will be logged as an adjustment
               </p>
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Low stock alert</label>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Low stock alert</label>
             <input
               type="number"
               value={form.low_stock_threshold}
               onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
         </div>
 
         {stockDelta !== 0 && (
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Reason for stock change
             </label>
             <input
               value={adjustNote}
               onChange={(e) => setAdjustNote(e.target.value)}
               placeholder="e.g. stock count correction, damaged goods"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
           </div>
         )}
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Cost price</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Cost price</label>
           <input
             type="number"
             step="0.01"
             value={form.cost_price}
             onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Category</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Category</label>
           <select
             value={form.category_id}
             onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           >
             <option value="">No category</option>
             {categories.map((c) => (
@@ -345,23 +345,23 @@ export default function EditProductPage() {
       </form>
 
       {/* Unit management — separate from the main form, saves instantly per change */}
-      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-neutral-900">Selling Units</h2>
-        <p className="mt-1 text-sm text-neutral-500">Changes here save immediately.</p>
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Selling Units</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Changes here save immediately.</p>
 
         {baseUnit && (
-          <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
               Base unit — {baseUnit.unit_name}
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="text-sm text-emerald-700">Price</span>
+              <span className="text-sm text-emerald-700 dark:text-emerald-300">Price</span>
               <input
                 type="number"
                 step="0.01"
                 defaultValue={baseUnit.price}
                 onBlur={(e) => handleUpdateBasePrice(e.target.value)}
-                className="w-28 rounded-lg border border-emerald-300 bg-white px-2 py-1 text-sm outline-none focus:border-emerald-500"
+                className="w-28 rounded-lg border border-emerald-300 bg-white px-2 py-1 text-sm outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               />
             </div>
           </div>
@@ -371,13 +371,13 @@ export default function EditProductPage() {
           {units
             .filter((u) => !u.is_base_unit)
             .map((unit) => (
-              <div key={unit.id} className="flex items-center gap-2 rounded-lg border border-neutral-200 p-3">
+              <div key={unit.id} className="flex items-center gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
                 <input
                   defaultValue={unit.unit_name}
                   onBlur={(e) => handleUpdateUnit(unit.id, { unit_name: e.target.value })}
-                  className="flex-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+                  className="flex-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
-                <div className="flex items-center gap-1 text-xs text-neutral-500">
+                <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
                   <span>=</span>
                   <input
                     type="number"
@@ -385,7 +385,7 @@ export default function EditProductPage() {
                     onBlur={(e) =>
                       handleUpdateUnit(unit.id, { conversion_to_base: parseInt(e.target.value) || 1 })
                     }
-                    className="w-16 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+                    className="w-16 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                   />
                   <span>{baseUnit?.unit_name}</span>
                 </div>
@@ -394,12 +394,12 @@ export default function EditProductPage() {
                   step="0.01"
                   defaultValue={unit.price}
                   onBlur={(e) => handleUpdateUnit(unit.id, { price: parseFloat(e.target.value) || 0 })}
-                  className="w-24 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+                  className="w-24 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveUnit(unit.id)}
-                  className="text-xs text-red-500 hover:underline"
+                  className="text-xs text-red-500 hover:underline dark:text-red-400"
                 >
                   remove
                 </button>
@@ -407,19 +407,19 @@ export default function EditProductPage() {
             ))}
         </div>
 
-        <div className="mt-4 grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-2 border-t border-neutral-100 pt-4">
+        <div className="mt-4 grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-2 border-t border-neutral-100 pt-4 dark:border-neutral-800">
           <input
             value={newUnitName}
             onChange={(e) => setNewUnitName(e.target.value)}
             placeholder="Name (carton)"
-            className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+            className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
           <input
             type="number"
             value={newUnitConversion}
             onChange={(e) => setNewUnitConversion(e.target.value)}
             placeholder={`= how many ${baseUnit?.unit_name || 'base'}`}
-            className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+            className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
           <input
             type="number"
@@ -427,7 +427,7 @@ export default function EditProductPage() {
             value={newUnitPrice}
             onChange={(e) => setNewUnitPrice(e.target.value)}
             placeholder="Price"
-            className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+            className="rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
           <button
             type="button"

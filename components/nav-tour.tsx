@@ -71,17 +71,17 @@ export default function NavTour({
       />
 
       <div
-        className="absolute w-72 rounded-xl bg-white p-4 shadow-2xl"
+        className="absolute w-72 rounded-xl bg-white p-4 shadow-2xl dark:bg-neutral-900"
         style={{ top: tooltipTop, left: tooltipLeft }}
       >
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
+        <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
           {stepIndex + 1} of {steps.length}
         </p>
-        <p className="mt-1 text-sm font-semibold text-neutral-900">{step.label}</p>
-        <p className="mt-1 text-sm text-neutral-600">{description}</p>
+        <p className="mt-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{step.label}</p>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{description}</p>
 
         <div className="mt-4 flex items-center justify-between">
-          <button onClick={finish} className="text-xs text-neutral-400 hover:text-neutral-600">
+          <button onClick={finish} className="text-xs text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300">
             Skip tour
           </button>
           <button

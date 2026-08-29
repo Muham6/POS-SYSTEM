@@ -31,22 +31,22 @@ export default function VoidSaleButton({ saleId }: { saleId: string }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="text-sm text-red-500 hover:underline">
+      <button onClick={() => setOpen(true)} className="text-sm text-red-500 hover:underline dark:text-red-400">
         Void Sale
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-neutral-900">Void this sale</h3>
-            <p className="mt-1 text-sm text-neutral-500">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-900">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Void this sale</h3>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               Stock will be returned to inventory. This cannot be undone.
             </p>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-red-600 dark:text-red-300">{error}</p>}
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Reason (e.g. wrong item rung up)"
-              className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-3 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
             <div className="mt-4 flex justify-end gap-3">
               <button
@@ -54,7 +54,7 @@ export default function VoidSaleButton({ saleId }: { saleId: string }) {
                   setOpen(false)
                   setError('')
                 }}
-                className="rounded-lg px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                className="rounded-lg px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
               >
                 Cancel
               </button>

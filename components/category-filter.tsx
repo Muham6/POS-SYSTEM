@@ -18,7 +18,7 @@ export default function CategoryFilter({
         const value = e.target.value
         router.push(value ? `/dashboard/products?category=${value}` : '/dashboard/products')
       }}
-      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
     >
       <option value="">All categories</option>
       {categories.map((c) => (

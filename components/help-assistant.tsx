@@ -1,10 +1,11 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MessageCircleQuestion, X, Send } from 'lucide-react'
 import { findLocalAnswer } from '@/lib/pos-knowledge'
 
 type Message = { role: 'user' | 'assistant'; content: string }
+type Point = { x: number; y: number }
 
 const SUGGESTED = [
   'How do I make a sale?',
@@ -16,6 +17,19 @@ const SUGGESTED = [
 const FALLBACK_ANSWER =
   "I don't have a canned answer for that yet. Try asking about selling, stock, suppliers, shifts, or settings — or check the sidebar for the relevant screen."
 
+const BUTTON_SIZE = 48
+const MARGIN = 16
+const DRAG_THRESHOLD = 6
+const STORAGE_KEY = 'pos_help_button_pos'
+const PANEL_WIDTH = 384
+const PANEL_HEIGHT = 420
+const PANEL_GAP = 12
+const MOBILE_BREAKPOINT = 640
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), Math.max(min, max))
+}
+
 export default function HelpAssistant() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -23,6 +37,99 @@ export default function HelpAssistant() {
   const [loading, setLoading] = useState(false)
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Draggable button position. Starts null (matches SSR) and is set from
+  // localStorage — or the bottom-right corner as a default — after mount.
+  const [pos, setPos] = useState<Point | null>(null)
+  const posRef = useRef<Point | null>(null)
+  const dragRef = useRef<{ startX: number; startY: number; originX: number; originY: number; moved: boolean } | null>(
+    null
+  )
+  const justDraggedRef = useRef(false)
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      let initial: Point | null = null
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY)
+        if (saved) initial = JSON.parse(saved)
+      } catch {
+        initial = null
+      }
+      if (!initial) {
+        initial = { x: window.innerWidth - BUTTON_SIZE - MARGIN, y: window.innerHeight - BUTTON_SIZE - MARGIN }
+      }
+      posRef.current = initial
+      setPos(initial)
+    })
+
+    function handleResize() {
+      setPos((p) => {
+        if (!p) return p
+        const next = {
+          x: clamp(p.x, MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN),
+          y: clamp(p.y, MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN),
+        }
+        posRef.current = next
+        return next
+      })
+    }
+    window.addEventListener('resize', handleResize)
+    return () => {
+      cancelAnimationFrame(id)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!posRef.current) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: posRef.current.x,
+      originY: posRef.current.y,
+      moved: false,
+    }
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current
+    if (!drag) return
+    const dx = e.clientX - drag.startX
+    const dy = e.clientY - drag.startY
+    if (!drag.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD) drag.moved = true
+    if (!drag.moved) return
+
+    const next = {
+      x: clamp(drag.originX + dx, MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN),
+      y: clamp(drag.originY + dy, MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN),
+    }
+    posRef.current = next
+    setPos(next)
+  }
+
+  function handlePointerUp() {
+    const drag = dragRef.current
+    dragRef.current = null
+    if (!drag) return
+    if (drag.moved) {
+      justDraggedRef.current = true
+      try {
+        if (posRef.current) localStorage.setItem(STORAGE_KEY, JSON.stringify(posRef.current))
+      } catch {
+        // localStorage unavailable — position just won't persist across reloads.
+      }
+    }
+  }
+
+  function handleClick() {
+    if (justDraggedRef.current) {
+      justDraggedRef.current = false
+      return
+    }
+    setOpen((v) => !v)
+  }
 
   function scrollToBottom() {
     requestAnimationFrame(() => {
@@ -77,35 +184,66 @@ export default function HelpAssistant() {
     scrollToBottom()
   }
 
+  // On desktop, anchor the panel near wherever the button currently is.
+  // On narrow screens, ignore button position and use a full-width bottom sheet.
+  const panelStyle = (() => {
+    if (typeof window === 'undefined' || !pos) return undefined
+    if (window.innerWidth < MOBILE_BREAKPOINT) return undefined
+
+    const openToLeft = pos.x + BUTTON_SIZE / 2 > window.innerWidth / 2
+    const openUpward = pos.y + BUTTON_SIZE / 2 > window.innerHeight / 2
+
+    const left = openToLeft
+      ? clamp(pos.x + BUTTON_SIZE - PANEL_WIDTH, MARGIN, window.innerWidth - PANEL_WIDTH - MARGIN)
+      : clamp(pos.x, MARGIN, window.innerWidth - PANEL_WIDTH - MARGIN)
+    const top = openUpward
+      ? clamp(pos.y - PANEL_GAP - PANEL_HEIGHT, MARGIN, window.innerHeight - PANEL_HEIGHT - MARGIN)
+      : clamp(pos.y + BUTTON_SIZE + PANEL_GAP, MARGIN, window.innerHeight - PANEL_HEIGHT - MARGIN)
+
+    return { left, top, width: PANEL_WIDTH }
+  })()
+
   return (
     <>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClick={handleClick}
         aria-label="Help assistant"
-        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:bg-emerald-600 lg:bottom-6 lg:right-6"
+        style={{ ...(pos ? { left: pos.x, top: pos.y } : {}), touchAction: 'none' }}
+        className={`fixed z-40 flex h-12 w-12 select-none items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition-colors hover:bg-emerald-600 active:cursor-grabbing ${
+          pos ? 'cursor-grab' : 'bottom-4 right-4 lg:bottom-6 lg:right-6'
+        }`}
       >
         {open ? <X size={22} /> : <MessageCircleQuestion size={22} />}
       </button>
 
       {open && (
-        <div className="fixed inset-x-4 bottom-20 z-40 flex max-h-[70vh] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl sm:inset-x-auto sm:right-6 sm:w-96 lg:bottom-24">
-          <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-            <p className="text-sm font-semibold text-neutral-800">Help</p>
+        <div
+          style={panelStyle}
+          className={`fixed z-40 flex max-h-[70vh] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-900 ${
+            panelStyle ? '' : 'inset-x-4 bottom-20 sm:inset-x-auto sm:right-6 sm:w-96 lg:bottom-24'
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+            <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Help</p>
             {aiConfigured === false && (
-              <span className="text-[10px] uppercase tracking-wide text-neutral-400">FAQ mode</span>
+              <span className="text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-500">FAQ mode</span>
             )}
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             {messages.length === 0 && (
               <div>
-                <p className="text-sm text-neutral-500">Ask me anything about using this app.</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">Ask me anything about using this app.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SUGGESTED.map((q) => (
                     <button
                       key={q}
                       onClick={() => send(q)}
-                      className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 hover:border-emerald-400 hover:text-emerald-700"
+                      className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 hover:border-emerald-400 hover:text-emerald-700 dark:border-neutral-800 dark:text-neutral-400 dark:hover:text-emerald-300"
                     >
                       {q}
                     </button>
@@ -120,7 +258,7 @@ export default function HelpAssistant() {
                 className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                   m.role === 'user'
                     ? 'ml-auto bg-emerald-500 text-white'
-                    : 'bg-neutral-100 text-neutral-800'
+                    : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200'
                 }`}
               >
                 {m.content}
@@ -128,7 +266,7 @@ export default function HelpAssistant() {
             ))}
 
             {loading && (
-              <div className="max-w-[85%] rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-400">
+              <div className="max-w-[85%] rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">
                 Thinking…
               </div>
             )}
@@ -139,13 +277,13 @@ export default function HelpAssistant() {
               e.preventDefault()
               send(input)
             }}
-            className="flex items-center gap-2 border-t border-neutral-200 p-3"
+            className="flex items-center gap-2 border-t border-neutral-200 p-3 dark:border-neutral-800"
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask a question…"
-              className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
             <button
               type="submit"

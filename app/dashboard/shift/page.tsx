@@ -99,26 +99,26 @@ export default function ShiftPage() {
     setNote('')
   }
 
-  if (loading) return <p className="text-sm text-neutral-500">Loading shift…</p>
+  if (loading) return <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading shift…</p>
 
   if (result) {
     const balanced = Math.abs(result.variance) < 0.01
     return (
       <div className="mx-auto max-w-sm text-center">
-        <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full ${balanced ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+        <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full ${balanced ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'}`}>
           <CheckCircle2 size={28} />
         </div>
-        <h1 className="text-xl font-semibold text-neutral-900">Shift closed</h1>
-        <div className="mt-6 space-y-2 rounded-xl border border-neutral-200 bg-white p-5 text-left text-sm">
-          <div className="flex justify-between text-neutral-600">
+        <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Shift closed</h1>
+        <div className="mt-6 space-y-2 rounded-xl border border-neutral-200 bg-white p-5 text-left text-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
             <span>Expected cash</span>
             <span>₦{result.expected.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-neutral-600">
+          <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
             <span>Counted cash</span>
             <span>₦{result.counted.toLocaleString()}</span>
           </div>
-          <div className={`flex justify-between border-t border-neutral-100 pt-2 font-semibold ${balanced ? 'text-emerald-600' : 'text-amber-600'}`}>
+          <div className={`flex justify-between border-t border-neutral-100 pt-2 font-semibold dark:border-neutral-800 ${balanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
             <span>{balanced ? 'Balanced' : result.variance > 0 ? 'Over' : 'Short'}</span>
             <span>₦{Math.abs(result.variance).toLocaleString()}</span>
           </div>
@@ -136,13 +136,13 @@ export default function ShiftPage() {
   if (!shift) {
     return (
       <div className="mx-auto max-w-sm">
-        <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center">
-          <Clock size={28} className="mx-auto mb-3 text-neutral-300" />
-          <h1 className="text-lg font-semibold text-neutral-900">Start your shift</h1>
-          <p className="mt-1 text-sm text-neutral-500">Enter how much cash is in the drawer right now.</p>
+        <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center dark:border-neutral-800 dark:bg-neutral-900">
+          <Clock size={28} className="mx-auto mb-3 text-neutral-300 dark:text-neutral-600" />
+          <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Start your shift</h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Enter how much cash is in the drawer right now.</p>
           <form onSubmit={handleOpen} className="mt-4 space-y-3">
             {error && (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-left text-sm text-red-600">
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-left text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                 {error}
               </p>
             )}
@@ -152,7 +152,7 @@ export default function ShiftPage() {
               value={openingFloat}
               onChange={(e) => setOpeningFloat(e.target.value)}
               placeholder="Opening cash (e.g. 5000)"
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-center text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-center text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
             />
             <button
               type="submit"
@@ -169,35 +169,35 @@ export default function ShiftPage() {
 
   return (
     <div className="mx-auto max-w-sm">
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-        <div className="flex items-center justify-center gap-2 text-emerald-700">
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-900 dark:bg-emerald-950/40">
+        <div className="flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-300">
           <Wallet size={16} />
           <span className="text-xs font-medium uppercase tracking-wider">Shift open</span>
         </div>
-        <p className="mt-1 text-xs text-emerald-600">
+        <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
           Started {new Date(shift.opened_at).toLocaleString('en-NG', { timeStyle: 'short', dateStyle: 'medium' })}
         </p>
       </div>
 
-      <div className="mt-4 space-y-2 rounded-xl border border-neutral-200 bg-white p-5 text-sm">
-        <div className="flex justify-between text-neutral-600">
+      <div className="mt-4 space-y-2 rounded-xl border border-neutral-200 bg-white p-5 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
           <span>Opening float</span>
           <span>₦{shift.opening_float.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between text-neutral-600">
+        <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
           <span>Cash sales so far</span>
           <span>₦{cashSoFar.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between border-t border-neutral-100 pt-2 font-semibold text-neutral-900">
+        <div className="flex justify-between border-t border-neutral-100 pt-2 font-semibold text-neutral-900 dark:border-neutral-800 dark:text-neutral-100">
           <span>Expected in drawer</span>
           <span>₦{(shift.opening_float + cashSoFar).toLocaleString()}</span>
         </div>
       </div>
 
-      <form onSubmit={handleClose} className="mt-4 space-y-3 rounded-xl border border-neutral-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-neutral-900">Close shift</h2>
+      <form onSubmit={handleClose} className="mt-4 space-y-3 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Close shift</h2>
         {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
         )}
         <input
           type="number"
@@ -205,13 +205,13 @@ export default function ShiftPage() {
           value={countedCash}
           onChange={(e) => setCountedCash(e.target.value)}
           placeholder="Cash counted in drawer"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
         />
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Note (optional)"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
         />
         <button
           type="submit"

@@ -407,11 +407,11 @@ export default function SellPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search or scan product…"
-          className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-base outline-none focus:border-emerald-500"
+          className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-base outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
         />
 
         {!search.trim() && products.length > 30 && (
-          <p className="mt-2 text-xs text-neutral-400">
+          <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
             Showing 30 of {products.length} products — search or scan to find a specific item.
           </p>
         )}
@@ -428,25 +428,25 @@ export default function SellPage() {
                 disabled={outOfStock}
                 className={`rounded-xl border p-3 text-left transition ${
                   outOfStock
-                    ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 opacity-50'
-                    : 'border-neutral-200 bg-white hover:border-emerald-400 hover:shadow-sm active:scale-[0.98]'
+                    ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 opacity-50 dark:border-neutral-800 dark:bg-neutral-800'
+                    : 'border-neutral-200 bg-white hover:border-emerald-400 hover:shadow-sm active:scale-[0.98] dark:border-neutral-800 dark:bg-neutral-900'
                 }`}
               >
-                <p className="text-sm font-medium text-neutral-900">{p.name}</p>
-                <p className="mt-1 text-sm text-neutral-500">
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{p.name}</p>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                   {baseUnit ? `₦${Number(baseUnit.price).toLocaleString()} / ${baseUnit.unit_name}` : 'No price set'}
                 </p>
-                <p className="mt-1 text-xs text-neutral-400">
+                <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
                   {outOfStock ? 'Out of stock' : `${p.stock_quantity} ${baseUnit?.unit_name}(s) left`}
                 </p>
                 {units.length > 1 && (
-                  <p className="mt-1 text-xs text-emerald-600">{units.length} units available</p>
+                  <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">{units.length} units available</p>
                 )}
               </button>
             )
           })}
           {filtered.length === 0 && (
-            <p className="col-span-full py-8 text-center text-sm text-neutral-400">
+            <p className="col-span-full py-8 text-center text-sm text-neutral-400 dark:text-neutral-500">
               No products match &quot;{search}&quot;
             </p>
           )}
@@ -455,41 +455,41 @@ export default function SellPage() {
 
       {/* Cart + checkout */}
       <div
-        className={`fixed inset-0 z-50 overflow-y-auto bg-white p-4 lg:static lg:z-auto lg:block lg:w-96 lg:shrink-0 lg:overflow-visible lg:bg-transparent lg:p-0 ${
+        className={`fixed inset-0 z-50 overflow-y-auto bg-white p-4 lg:static lg:z-auto lg:block lg:w-96 lg:shrink-0 lg:overflow-visible lg:bg-transparent lg:p-0 dark:bg-neutral-900 ${
           mobileCartOpen ? 'block' : 'hidden'
         }`}
       >
         <button
           onClick={() => setMobileCartOpen(false)}
-          className="mb-4 flex items-center gap-1 text-sm text-neutral-500 lg:hidden"
+          className="mb-4 flex items-center gap-1 text-sm text-neutral-500 lg:hidden dark:text-neutral-400"
         >
           ← Back to products
         </button>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Cart ({cart.length})
           </h2>
 
           {cart.length === 0 ? (
-            <p className="mt-4 text-sm text-neutral-400">Tap a product to add it.</p>
+            <p className="mt-4 text-sm text-neutral-400 dark:text-neutral-500">Tap a product to add it.</p>
           ) : (
             <div className="mt-3 space-y-3">
               {cart.map((item, index) => {
                 const units = unitsByProduct[item.product_id] || []
                 return (
-                  <div key={index} className="rounded-lg border border-neutral-100 p-2">
+                  <div key={index} className="rounded-lg border border-neutral-100 p-2 dark:border-neutral-800">
                     <div className="flex items-center gap-2">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-neutral-900">{item.product_name}</p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{item.product_name}</p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
                           ₦{item.price.toLocaleString()} × {item.quantity}
                         </p>
                       </div>
                       <button
                         onClick={() => changeQty(index, -1)}
                         aria-label={`Decrease quantity of ${item.product_name}`}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
                       >
                         −
                       </button>
@@ -504,20 +504,20 @@ export default function SellPage() {
                           if (e.target.value === '' || Number(e.target.value) < 1) setQtyDirect(index, '1')
                         }}
                         aria-label={`Quantity of ${item.product_name}`}
-                        className="w-14 rounded-lg border border-neutral-300 px-1 py-1 text-center text-sm outline-none focus:border-emerald-500"
+                        className="w-14 rounded-lg border border-neutral-300 px-1 py-1 text-center text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                       />
                       <button
                         onClick={() => changeQty(index, 1)}
                         disabled={item.quantity >= maxQtyFor(item)}
                         aria-label={`Increase quantity of ${item.product_name}`}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
                       >
                         +
                       </button>
                       <button
                         onClick={() => removeItem(index)}
                         aria-label={`Remove ${item.product_name} from cart`}
-                        className="ml-1 text-xs text-red-500 hover:underline"
+                        className="ml-1 text-xs text-red-500 hover:underline dark:text-red-400"
                       >
                         remove
                       </button>
@@ -532,7 +532,7 @@ export default function SellPage() {
                             className={`rounded-full px-2 py-0.5 text-xs font-medium transition ${
                               u.id === item.unit_id
                                 ? 'bg-emerald-500 text-white'
-                                : 'border border-neutral-300 text-neutral-500 hover:bg-neutral-50'
+                                : 'border border-neutral-300 text-neutral-500 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800'
                             }`}
                           >
                             {u.unit_name}
@@ -547,20 +547,20 @@ export default function SellPage() {
           )}
 
           {/* Customer picker */}
-          <div className="mt-4 border-t border-neutral-200 pt-4">
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Customer (optional)
             </label>
 
             {selectedCustomer ? (
-              <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-                <span className="text-sm text-emerald-800">
+              <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-950/40">
+                <span className="text-sm text-emerald-800 dark:text-emerald-200">
                   {selectedCustomer.name || selectedCustomer.company_or_store}
                   {selectedCustomer.name && selectedCustomer.company_or_store && (
-                    <span className="text-emerald-600"> · {selectedCustomer.company_or_store}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400"> · {selectedCustomer.company_or_store}</span>
                   )}
                 </span>
-                <button onClick={() => setSelectedCustomer(null)} className="text-xs text-emerald-700 hover:underline">
+                <button onClick={() => setSelectedCustomer(null)} className="text-xs text-emerald-700 hover:underline dark:text-emerald-300">
                   change
                 </button>
               </div>
@@ -570,10 +570,10 @@ export default function SellPage() {
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   placeholder="Search name, store, or phone…"
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
                 {customerSearch && (
-                  <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-neutral-200">
+                  <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
                     {filteredCustomers.map((c) => (
                       <button
                         key={c.id}
@@ -581,22 +581,22 @@ export default function SellPage() {
                           setSelectedCustomer(c)
                           setCustomerSearch('')
                         }}
-                        className="block w-full px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
                       >
                         {c.name || c.company_or_store}
                         {c.name && c.company_or_store && (
-                          <span className="text-neutral-400"> · {c.company_or_store}</span>
+                          <span className="text-neutral-400 dark:text-neutral-500"> · {c.company_or_store}</span>
                         )}
                       </button>
                     ))}
                     {filteredCustomers.length === 0 && (
-                      <p className="px-3 py-2 text-sm text-neutral-400">No match.</p>
+                      <p className="px-3 py-2 text-sm text-neutral-400 dark:text-neutral-500">No match.</p>
                     )}
                   </div>
                 )}
                 <button
                   onClick={() => setShowAddCustomer(true)}
-                  className="mt-2 text-xs text-emerald-600 hover:underline"
+                  className="mt-2 text-xs text-emerald-600 hover:underline dark:text-emerald-400"
                 >
                   + Add new customer
                 </button>
@@ -604,25 +604,25 @@ export default function SellPage() {
             )}
 
             {showAddCustomer && (
-              <div className="mt-3 space-y-2 rounded-lg border border-neutral-200 p-3">
-                {customerError && <p className="text-xs text-red-600">{customerError}</p>}
+              <div className="mt-3 space-y-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
+                {customerError && <p className="text-xs text-red-600 dark:text-red-300">{customerError}</p>}
                 <input
                   value={newCustomerName}
                   onChange={(e) => setNewCustomerName(e.target.value)}
                   placeholder="Customer name"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
                 <input
                   value={newCustomerCompany}
                   onChange={(e) => setNewCustomerCompany(e.target.value)}
                   placeholder="Company / store (optional)"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
                 <input
                   value={newCustomerPhone}
                   onChange={(e) => setNewCustomerPhone(e.target.value)}
                   placeholder="Phone (optional)"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
                 <div className="flex gap-2">
                   <button
@@ -636,7 +636,7 @@ export default function SellPage() {
                       setShowAddCustomer(false)
                       setCustomerError('')
                     }}
-                    className="rounded-lg px-3 py-2 text-sm text-neutral-500 hover:bg-neutral-100"
+                    className="rounded-lg px-3 py-2 text-sm text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
                   >
                     Cancel
                   </button>
@@ -645,79 +645,79 @@ export default function SellPage() {
             )}
           </div>
 
-          <div className="mt-4 border-t border-neutral-200 pt-4">
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Discount (₦, optional)
             </label>
             <input
               type="number"
               value={discount}
               onChange={(e) => setDiscount(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               placeholder="0"
             />
           </div>
 
           {/* Split payment */}
-          <div className="mt-4 border-t border-neutral-200 pt-4">
+          <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Payment</label>
-              <button onClick={fillRemainingAsCash} className="text-xs text-emerald-600 hover:underline">
+              <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Payment</label>
+              <button onClick={fillRemainingAsCash} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">
                 fill rest as cash
               </button>
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2">
               <div>
-                <span className="block text-[10px] uppercase text-neutral-400">Cash</span>
+                <span className="block text-[10px] uppercase text-neutral-400 dark:text-neutral-500">Cash</span>
                 <input
                   type="number"
                   value={cashAmount}
                   onChange={(e) => setCashAmount(e.target.value)}
                   placeholder="0"
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
               </div>
               <div>
-                <span className="block text-[10px] uppercase text-neutral-400">Card</span>
+                <span className="block text-[10px] uppercase text-neutral-400 dark:text-neutral-500">Card</span>
                 <input
                   type="number"
                   value={cardAmount}
                   onChange={(e) => setCardAmount(e.target.value)}
                   placeholder="0"
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
               </div>
               <div>
-                <span className="block text-[10px] uppercase text-neutral-400">Transfer</span>
+                <span className="block text-[10px] uppercase text-neutral-400 dark:text-neutral-500">Transfer</span>
                 <input
                   type="number"
                   value={transferAmount}
                   onChange={(e) => setTransferAmount(e.target.value)}
                   placeholder="0"
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                 />
               </div>
             </div>
           </div>
 
-          <div className="mt-4 space-y-1 border-t border-neutral-200 pt-4 text-sm">
-            <div className="flex justify-between text-neutral-600">
+          <div className="mt-4 space-y-1 border-t border-neutral-200 pt-4 text-sm dark:border-neutral-800">
+            <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
               <span>Subtotal</span>
               <span>₦{subtotal.toLocaleString()}</span>
             </div>
             {discountValue > 0 && (
-              <div className="flex justify-between text-neutral-600">
+              <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                 <span>Discount</span>
                 <span>−₦{discountValue.toLocaleString()}</span>
               </div>
             )}
-            <div className="flex justify-between text-lg font-semibold text-neutral-900">
+            <div className="flex justify-between text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               <span>Total</span>
               <span>₦{total.toLocaleString()}</span>
             </div>
             <div
               className={`flex justify-between text-sm font-medium ${
-                remaining === 0 ? 'text-emerald-600' : remaining > 0 ? 'text-amber-600' : 'text-red-600'
+                remaining === 0 ? 'text-emerald-600 dark:text-emerald-400' : remaining > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-300'
               }`}
             >
               <span>{remaining === 0 ? 'Fully paid' : remaining > 0 ? 'Remaining' : 'Overpaid'}</span>
@@ -726,7 +726,7 @@ export default function SellPage() {
           </div>
 
           {error && (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
           )}
 
           <button

@@ -92,45 +92,45 @@ export default function StockTakePage() {
     load()
   }
 
-  if (loading) return <p className="text-sm text-neutral-500">Loading products…</p>
+  if (loading) return <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading products…</p>
 
   return (
     <div>
       <div className="mb-6">
-        <Link href="/dashboard/stock-history" className="text-sm text-neutral-500 hover:underline">
+        <Link href="/dashboard/stock-history" className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
           ← Stock History
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-neutral-900">Stock Take</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Stock Take</h1>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Walk through your shelves and enter what you physically count. Leave a product blank to skip it — only entered rows get updated.
         </p>
       </div>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
       )}
       {success && (
-        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
           {success}
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex-1">
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Search</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Search</label>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Product name or SKU…"
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Category</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Category</label>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="mt-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
           >
             <option value="">All categories</option>
             {categories.map((c) => (
@@ -141,15 +141,15 @@ export default function StockTakePage() {
       </div>
 
       {!search.trim() && !categoryFilter && products.length > 50 && (
-        <p className="mb-3 text-xs text-neutral-400">
+        <p className="mb-3 text-xs text-neutral-400 dark:text-neutral-500">
           Showing 50 of {products.length} products — search or filter by category to reach the rest.
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500">
+            <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-400">
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3 text-right">System stock</th>
@@ -162,13 +162,13 @@ export default function StockTakePage() {
               const value = counted[p.id] ?? ''
               const diff = value.trim() !== '' ? parseInt(value) - p.stock_quantity : null
               return (
-                <tr key={p.id} className="border-b border-neutral-100 last:border-0">
-                  <td className="px-4 py-3 font-medium text-neutral-900">
+                <tr key={p.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+                  <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
                     {p.name}
-                    {p.sku && <span className="ml-1 text-xs text-neutral-400">({p.sku})</span>}
+                    {p.sku && <span className="ml-1 text-xs text-neutral-400 dark:text-neutral-500">({p.sku})</span>}
                   </td>
-                  <td className="px-4 py-3 text-neutral-500">{p.categories?.name || '—'}</td>
-                  <td className="px-4 py-3 text-right text-neutral-500">{p.stock_quantity}</td>
+                  <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.categories?.name || '—'}</td>
+                  <td className="px-4 py-3 text-right text-neutral-500 dark:text-neutral-400">{p.stock_quantity}</td>
                   <td className="px-4 py-3 text-right">
                     <input
                       type="number"
@@ -176,11 +176,11 @@ export default function StockTakePage() {
                       value={value}
                       onChange={(e) => setCounted((prev) => ({ ...prev, [p.id]: e.target.value }))}
                       placeholder="—"
-                      className="w-20 rounded-lg border border-neutral-300 px-2 py-1 text-right text-sm outline-none focus:border-emerald-500"
+                      className="w-20 rounded-lg border border-neutral-300 px-2 py-1 text-right text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
                     />
                   </td>
                   <td className={`px-4 py-3 text-right font-medium ${
-                    diff === null ? 'text-neutral-300' : diff === 0 ? 'text-neutral-400' : diff > 0 ? 'text-emerald-600' : 'text-red-600'
+                    diff === null ? 'text-neutral-300 dark:text-neutral-600' : diff === 0 ? 'text-neutral-400 dark:text-neutral-500' : diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-300'
                   }`}>
                     {diff === null ? '—' : diff > 0 ? `+${diff}` : diff}
                   </td>
@@ -189,8 +189,8 @@ export default function StockTakePage() {
             })}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-neutral-400">
-                  <ClipboardCheck size={28} className="mx-auto mb-2 text-neutral-300" />
+                <td colSpan={5} className="px-4 py-12 text-center text-neutral-400 dark:text-neutral-500">
+                  <ClipboardCheck size={28} className="mx-auto mb-2 text-neutral-300 dark:text-neutral-600" />
                   No products match.
                 </td>
               </tr>
@@ -199,14 +199,14 @@ export default function StockTakePage() {
         </table>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Note for this stock take (optional)"
-          className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
         />
-        <p className="text-sm text-neutral-500">{enteredCount} counted</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">{enteredCount} counted</p>
         <button
           onClick={handleSubmit}
           disabled={saving || enteredCount === 0}

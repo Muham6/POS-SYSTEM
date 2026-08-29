@@ -28,20 +28,20 @@ export default async function UsersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-neutral-900">Users</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Users</h1>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Error loading users: {error.message}
         </p>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500">
+                <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-400">
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Role</th>
@@ -51,17 +51,19 @@ export default async function UsersPage() {
               </thead>
               <tbody>
                 {rows.map((u) => (
-                  <tr key={u.id} className="border-b border-neutral-100 last:border-0">
-                    <td className="px-4 py-3 font-medium text-neutral-900">
+                  <tr key={u.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+                    <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
                       {u.full_name || 'Unnamed'}
-                      {u.id === profile.id && <span className="ml-2 text-xs text-neutral-400">(you)</span>}
+                      {u.id === profile.id && <span className="ml-2 text-xs text-neutral-400 dark:text-neutral-500">(you)</span>}
                     </td>
-                    <td className="px-4 py-3 text-neutral-500">{u.email || '—'}</td>
-                    <td className="px-4 py-3 capitalize text-neutral-700">{u.role}</td>
+                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{u.email || '—'}</td>
+                    <td className="px-4 py-3 capitalize text-neutral-700 dark:text-neutral-300">{u.role}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          u.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+                          u.is_active
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                            : 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300'
                         }`}
                       >
                         {u.is_active ? 'Active' : 'Deactivated'}
@@ -74,7 +76,7 @@ export default async function UsersPage() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-neutral-400">
+                    <td colSpan={5} className="px-4 py-12 text-center text-neutral-400 dark:text-neutral-500">
                       No users yet.
                     </td>
                   </tr>

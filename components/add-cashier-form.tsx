@@ -42,14 +42,14 @@ export default function AddCashierForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-neutral-200 bg-white p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Add Account</h2>
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Add Account</h2>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
       )}
       {success && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
           {success}
         </p>
       )}
@@ -59,7 +59,7 @@ export default function AddCashierForm() {
         onChange={(e) => setFullName(e.target.value)}
         placeholder="Full name"
         required
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
       />
       <input
         type="email"
@@ -67,7 +67,7 @@ export default function AddCashierForm() {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         required
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
       />
       <input
         type="text"
@@ -76,12 +76,12 @@ export default function AddCashierForm() {
         placeholder="Temporary password"
         required
         minLength={6}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
       />
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as 'cashier' | 'admin')}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
       >
         <option value="cashier">Cashier</option>
         <option value="admin">Admin</option>
@@ -95,7 +95,7 @@ export default function AddCashierForm() {
         {loading ? 'Creating…' : 'Create Account'}
       </button>
 
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-neutral-400 dark:text-neutral-500">
         Share the email and temporary password with them directly — they can sign in immediately.
       </p>
     </form>

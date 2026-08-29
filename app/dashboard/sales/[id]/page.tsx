@@ -25,15 +25,15 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient()
   const profile = await getProfile()
 
-  const { data: sale } = await supabase
+  const { data: sale, error: saleError } = await supabase
     .from('sales')
     .select(
-   `
-   id, sale_number, created_at, subtotal, discount, total,
-   cash_amount, card_amount, transfer_amount, payment_method,
-   profiles!sales_cashier_id_fkey ( full_name ),
-   customers ( name, company_or_store, phone )
-     `
+      `
+      id, sale_number, created_at, subtotal, discount, total,
+      cash_amount, card_amount, transfer_amount, payment_method,
+      profiles!sales_cashier_id_fkey ( full_name ),
+      customers ( name, company_or_store, phone )
+      `
     )
     .eq('id', id)
     .single()
@@ -44,6 +44,10 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
     .eq('sale_id', id)
 
   const { data: storeSettings } = await supabase.from('store_settings').select('*').eq('id', 1).single()
+
+  if (saleError) {
+    return <p className="text-sm text-red-600">Error loading sale: {saleError.message}</p>
+  }
 
   if (!sale) {
     return <p className="text-sm text-neutral-500">Sale not found.</p>

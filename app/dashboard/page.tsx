@@ -9,10 +9,9 @@ export default async function DashboardOverview() {
   const isAdmin = profile?.role === 'admin'
   const supabase = await createClient()
 
- 
-const today = new Date().toISOString().slice(0, 10)
-// eslint-disable-next-line react-hooks/purity
-const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+  const today = new Date().toISOString().slice(0, 10)
+  // eslint-disable-next-line react-hooks/purity
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
 
   let todayTotal = 0
   let todayCount = 0

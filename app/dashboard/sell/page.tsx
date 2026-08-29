@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Receipt from '@/components/receipt'
+import { queueSale } from '@/lib/offline-queue'
 
 type Product = {
   id: string
@@ -266,7 +267,37 @@ export default function SellPage() {
     setNewCustomerPhone('')
   }
 
+  function finishSaleLocally() {
+    setReceipt({
+      saleNumber: 'Pending sync',
+      items: cart,
+      subtotal,
+      discount: discountValue,
+      total,
+      cash,
+      card,
+      transfer,
+      customer: selectedCustomer,
+    })
+    setError('')
+    resetCartState()
+    // Reuse the receipt screen, but the "Pending sync" sale number makes it clear
+    // this hasn't been confirmed by the server yet.
+  }
+
+  function resetCartState() {
+    setCart([])
+    setMobileCartOpen(false)
+    setDiscount('')
+    setCashAmount('')
+    setCardAmount('')
+    setTransferAmount('')
+    setSelectedCustomer(null)
+    setCustomerSearch('')
+  }
+
   async function handleCheckout() {
+    if (loading) return
     if (cart.length === 0) return
     setError('')
 
@@ -281,49 +312,58 @@ export default function SellPage() {
 
     setLoading(true)
 
-    const { data: saleId, error } = await supabase.rpc('process_sale', {
+    const payload = {
       p_items: cart.map((i) => ({ unit_id: i.unit_id, quantity: i.quantity })),
       p_cash_amount: cash,
       p_card_amount: card,
       p_transfer_amount: transfer,
       p_discount: discountValue,
       p_customer_id: selectedCustomer?.id || null,
-    })
+    }
 
-    setLoading(false)
-
-    if (error) {
-      setError(error.message)
+    // If we're already offline, don't even attempt the network call.
+    if (!navigator.onLine) {
+      queueSale(payload)
+      finishSaleLocally()
+      setLoading(false)
       return
     }
 
-    const { data: sale } = await supabase
-      .from('sales')
-      .select('sale_number')
-      .eq('id', saleId)
-      .single()
+    try {
+      const { data: saleId, error } = await supabase.rpc('process_sale', payload)
 
-    setReceipt({
-      saleNumber: sale?.sale_number || String(saleId),
-      items: cart,
-      subtotal,
-      discount: discountValue,
-      total,
-      cash,
-      card,
-      transfer,
-      customer: selectedCustomer,
-    })
+      if (error) {
+        setLoading(false)
+        setError(error.message)
+        return
+      }
 
-    setCart([])
-    setMobileCartOpen(false)
-    setDiscount('')
-    setCashAmount('')
-    setCardAmount('')
-    setTransferAmount('')
-    setSelectedCustomer(null)
-    setCustomerSearch('')
-    loadProducts()
+      const { data: sale } = await supabase
+        .from('sales')
+        .select('sale_number')
+        .eq('id', saleId)
+        .single()
+
+      setReceipt({
+        saleNumber: sale?.sale_number || String(saleId),
+        items: cart,
+        subtotal,
+        discount: discountValue,
+        total,
+        cash,
+        card,
+        transfer,
+        customer: selectedCustomer,
+      })
+      resetCartState()
+      loadProducts()
+    } catch {
+      // The request itself failed to reach the server — treat as offline.
+      queueSale(payload)
+      finishSaleLocally()
+    }
+
+    setLoading(false)
   }
 
   function startNewSale() {
@@ -414,18 +454,18 @@ export default function SellPage() {
       </div>
 
       {/* Cart + checkout */}
-      <div className={`
-        fixed inset-0 z-50 overflow-y-auto bg-white p-4 
-        lg:static lg:z-auto lg:block lg:w-96 lg:shrink-0 lg:overflow-visible lg:bg-transparent lg:p-0
-        ${mobileCartOpen ? 'block' : 'hidden'}
-      `}>
-        <button 
-          onClick={() => setMobileCartOpen(false)} 
+      <div
+        className={`fixed inset-0 z-50 overflow-y-auto bg-white p-4 lg:static lg:z-auto lg:block lg:w-96 lg:shrink-0 lg:overflow-visible lg:bg-transparent lg:p-0 ${
+          mobileCartOpen ? 'block' : 'hidden'
+        }`}
+      >
+        <button
+          onClick={() => setMobileCartOpen(false)}
           className="mb-4 flex items-center gap-1 text-sm text-neutral-500 lg:hidden"
         >
           ← Back to products
         </button>
-        
+
         <div className="rounded-xl border border-neutral-200 bg-white p-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
             Cart ({cart.length})
@@ -448,6 +488,7 @@ export default function SellPage() {
                       </div>
                       <button
                         onClick={() => changeQty(index, -1)}
+                        aria-label={`Decrease quantity of ${item.product_name}`}
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50"
                       >
                         −
@@ -462,16 +503,22 @@ export default function SellPage() {
                         onBlur={(e) => {
                           if (e.target.value === '' || Number(e.target.value) < 1) setQtyDirect(index, '1')
                         }}
+                        aria-label={`Quantity of ${item.product_name}`}
                         className="w-14 rounded-lg border border-neutral-300 px-1 py-1 text-center text-sm outline-none focus:border-emerald-500"
                       />
                       <button
                         onClick={() => changeQty(index, 1)}
                         disabled={item.quantity >= maxQtyFor(item)}
+                        aria-label={`Increase quantity of ${item.product_name}`}
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40"
                       >
                         +
                       </button>
-                      <button onClick={() => removeItem(index)} className="ml-1 text-xs text-red-500 hover:underline">
+                      <button
+                        onClick={() => removeItem(index)}
+                        aria-label={`Remove ${item.product_name} from cart`}
+                        className="ml-1 text-xs text-red-500 hover:underline"
+                      >
                         remove
                       </button>
                     </div>
@@ -694,7 +741,7 @@ export default function SellPage() {
 
       {/* Sticky mobile cart bar */}
       {cart.length > 0 && !mobileCartOpen && (
-        <button 
+        <button
           onClick={() => setMobileCartOpen(true)}
           className="fixed inset-x-4 bottom-4 z-40 flex items-center justify-between rounded-xl bg-emerald-500 px-5 py-4 font-medium text-white shadow-lg lg:hidden"
         >

@@ -18,11 +18,11 @@ export default async function ReportsPage() {
     .slice(0, 10)
 
   const [
-    { data: summary },
-    { data: lowStock },
-    { data: topProducts },
-    { data: paymentRows },
-    { data: profitRows },
+    { data: summary, error: summaryError },
+    { data: lowStock, error: lowStockError },
+    { data: topProducts, error: topProductsError },
+    { data: paymentRows, error: paymentError },
+    { data: profitRows, error: profitError },
   ] = await Promise.all([
     supabase
       .from('daily_sales_summary')
@@ -51,6 +51,8 @@ export default async function ReportsPage() {
       .select('*')
       .gte('sale_day', weekAgo),
   ])
+
+  const loadError = summaryError || lowStockError || topProductsError || paymentError || profitError
 
   const rows = summary || []
 
@@ -116,6 +118,12 @@ export default async function ReportsPage() {
         Reports
       </h1>
 
+      {loadError && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          Some report data failed to load: {loadError.message}
+        </p>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-neutral-200 bg-white p-5">
           <p className="text-xs uppercase tracking-wider text-neutral-500">
@@ -169,7 +177,6 @@ export default async function ReportsPage() {
         </div>
       </div>
 
-      {/* New Sales Trend Chart Section */}
       <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Last 7 days</h2>
         <div className="mt-3">

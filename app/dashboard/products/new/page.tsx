@@ -41,7 +41,13 @@ export default function NewProductPage() {
       .from('categories')
       .select('id, name')
       .order('name')
-      .then(({ data }) => setCategories(data || []))
+      .then(({ data, error }) => {
+        if (error) {
+          setError(error.message)
+          return
+        }
+        setCategories(data || [])
+      })
   }, [supabase])
 
   function addExtraUnit() {

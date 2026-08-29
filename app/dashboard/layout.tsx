@@ -21,26 +21,31 @@ export default async function DashboardLayout({
   const isAdmin = profile.role === 'admin'
 
   const baseLinks = [
-    { href: '/dashboard', label: 'Overview', live: true },
-    { href: '/dashboard/sell', label: 'Sell', live: true },
-  ]
-  const adminLinks = [
-    { href: '/dashboard/products', label: 'Products', live: true },
-    { href: '/dashboard/sales', label: 'Sales History', live: true },
-    { href: '/dashboard/settings', label: 'Settings', live: true },
-    { href: '/dashboard/reports', label: 'Reports', live: true },
-    { href: '/dashboard/users', label: 'Users', live: true },
-  ]
+  { href: '/dashboard', label: 'Overview', live: true },
+  { href: '/dashboard/sell', label: 'Sell', live: true },
+  { href: '/dashboard/shift', label: 'Shift', live: true },
+]
+const adminLinks = [
+  { href: '/dashboard/products', label: 'Products', live: true },
+  { href: '/dashboard/stock-history', label: 'Stock History', live: true },
+  { href: '/dashboard/suppliers', label: 'Suppliers', live: true },
+  { href: '/dashboard/sales', label: 'Sales History', live: true },
+  { href: '/dashboard/shift/history', label: 'Shift History', live: true },
+  { href: '/dashboard/reports', label: 'Reports', live: true },
+  { href: '/dashboard/users', label: 'Users', live: true },
+  { href: '/dashboard/settings', label: 'Settings', live: true },
+]
 
   const links = isAdmin ? [...baseLinks, ...adminLinks] : baseLinks
 
   return (
-    <DashboardShell 
-      links={links} 
-      fullName={profile.full_name} 
+    <DashboardShell
+      links={links}
+      fullName={profile.full_name}
       role={profile.role}
       storeName={settings?.store_name || 'POS System'}
       logoUrl={settings?.logo_url}
+      userId={profile.id}
     >
       {children}
     </DashboardShell>

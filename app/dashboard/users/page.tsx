@@ -19,7 +19,7 @@ export default async function UsersPage() {
   }
 
   const supabase = await createClient()
-  const { data: users } = await supabase
+  const { data: users, error } = await supabase
     .from('profiles')
     .select('id, full_name, email, role, is_active')
     .order('full_name')
@@ -29,6 +29,12 @@ export default async function UsersPage() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-neutral-900">Users</h1>
+
+      {error && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          Error loading users: {error.message}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -66,6 +72,13 @@ export default async function UsersPage() {
                     </td>
                   </tr>
                 ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-neutral-400">
+                      No users yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

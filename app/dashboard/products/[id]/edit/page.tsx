@@ -21,6 +21,7 @@ export default function EditProductPage() {
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [originalStock, setOriginalStock] = useState(0)
@@ -42,7 +43,11 @@ export default function EditProductPage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: product }, { data: cats }, { data: unitRows }] = await Promise.all([
+      const [
+        { data: product, error: productError },
+        { data: cats },
+        { data: unitRows },
+      ] = await Promise.all([
         supabase.from('products').select('*').eq('id', productId).single(),
         supabase.from('categories').select('id, name').order('name'),
         supabase
@@ -52,7 +57,9 @@ export default function EditProductPage() {
           .order('is_base_unit', { ascending: false }),
       ])
 
-      if (product) {
+      if (productError) {
+        setLoadError(productError.message)
+      } else if (product) {
         setForm({
           name: product.name || '',
           sku: product.sku || '',
@@ -77,8 +84,20 @@ export default function EditProductPage() {
     const price = parseFloat(newPrice)
     if (isNaN(price)) return
 
-    await supabase.from('product_units').update({ price }).eq('id', baseUnit.id)
-    await supabase.from('products').update({ price }).eq('id', productId)
+    setError('')
+    const { error: unitError } = await supabase
+      .from('product_units')
+      .update({ price })
+      .eq('id', baseUnit.id)
+    const { error: productPriceError } = await supabase
+      .from('products')
+      .update({ price })
+      .eq('id', productId)
+
+    if (unitError || productPriceError) {
+      setError((unitError || productPriceError)!.message)
+      return
+    }
     setUnits((prev) => prev.map((u) => (u.id === baseUnit.id ? { ...u, price } : u)))
   }
 
@@ -111,13 +130,29 @@ export default function EditProductPage() {
   }
 
   async function handleUpdateUnit(unitId: string, patch: Partial<Unit>) {
-    await supabase.from('product_units').update(patch).eq('id', unitId)
+    setError('')
+    const { error: updateError } = await supabase
+      .from('product_units')
+      .update(patch)
+      .eq('id', unitId)
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
     setUnits((prev) => prev.map((u) => (u.id === unitId ? { ...u, ...patch } : u)))
   }
 
   async function handleRemoveUnit(unitId: string) {
     if (!confirm('Remove this unit? Past sales already recorded with it are unaffected.')) return
-    await supabase.from('product_units').delete().eq('id', unitId)
+    setError('')
+    const { error: deleteError } = await supabase
+      .from('product_units')
+      .delete()
+      .eq('id', unitId)
+    if (deleteError) {
+      setError(deleteError.message)
+      return
+    }
     setUnits((prev) => prev.filter((u) => u.id !== unitId))
   }
 
@@ -166,7 +201,32 @@ export default function EditProductPage() {
   }
 
   if (fetching) {
-    return <p className="text-sm text-neutral-500">Loading product…</p>
+    return (
+      <div className="max-w-lg">
+        <div className="h-4 w-20 animate-pulse rounded bg-neutral-200" />
+        <div className="mt-6 h-7 w-40 animate-pulse rounded bg-neutral-200" />
+        <div className="mt-6 space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-9 animate-pulse rounded-lg bg-neutral-100" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-lg">
+        <div className="mb-6 flex items-center gap-3">
+          <Link href="/dashboard/products" className="text-sm text-neutral-500 hover:underline">
+            ← Products
+          </Link>
+        </div>
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          Couldn&apos;t load this product: {loadError}
+        </p>
+      </div>
+    )
   }
 
   const stockDelta = parseInt(form.stock_quantity || '0') - originalStock
@@ -181,11 +241,11 @@ export default function EditProductPage() {
 
       <h1 className="mb-6 text-2xl font-semibold text-neutral-900">Edit Product</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
-        {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-        )}
+      {error && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      )}
 
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
         <div>
           <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500">Product name</label>
           <input

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { Eye, ReceiptText } from 'lucide-react'  // Added import
+import { Eye, ReceiptText } from 'lucide-react'
 
 type Sale = {
   id: string
@@ -62,7 +62,7 @@ export default async function SalesHistoryPage({
           </Link>
           <h1 className="mt-2 text-2xl font-semibold text-neutral-900">Sales History</h1>
         </div>
-        
+
         <a
           href={`/api/sales-csv${from || to ? `?from=${from || ''}&to=${to || ''}` : ''}`}
           className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
@@ -141,10 +141,11 @@ export default async function SalesHistoryPage({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Link 
-                    href={`/dashboard/sales/${s.id}`} 
-                    className="text-emerald-600 hover:text-emerald-700" 
+                  <Link
+                    href={`/dashboard/sales/${s.id}`}
+                    className="text-emerald-600 hover:text-emerald-700"
                     title="View"
+                    aria-label={`View sale ${s.sale_number}`}
                   >
                     <Eye size={16} />
                   </Link>

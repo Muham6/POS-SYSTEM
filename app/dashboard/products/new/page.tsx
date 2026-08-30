@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/toast-provider'
+import { Upload } from 'lucide-react'
 
 type ExtraUnit = {
   unit_name: string
@@ -14,9 +16,12 @@ type ExtraUnit = {
 export default function NewProductPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { showToast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
 
@@ -27,6 +32,7 @@ export default function NewProductPage() {
     stock_quantity: '',
     low_stock_threshold: '5',
     category_id: '',
+    image_url: '',
   })
 
   // Base unit — required for every product
@@ -49,6 +55,40 @@ export default function NewProductPage() {
         setCategories(data || [])
       })
   }, [supabase])
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file (PNG, JPG, etc).')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be under 2MB.')
+      return
+    }
+
+    setUploading(true)
+    setError('')
+
+    const ext = file.name.split('.').pop()
+    const path = `product-${Date.now()}.${ext}`
+
+    const { error: uploadError } = await supabase.storage.from('store-assets').upload(path, file, {
+      upsert: true,
+    })
+
+    if (uploadError) {
+      setUploading(false)
+      setError(uploadError.message)
+      return
+    }
+
+    const { data: publicUrl } = supabase.storage.from('store-assets').getPublicUrl(path)
+    setForm((f) => ({ ...f, image_url: publicUrl.publicUrl }))
+    setUploading(false)
+  }
 
   function addExtraUnit() {
     setExtraUnits((prev) => [...prev, { unit_name: '', conversion_to_base: '', price: '' }])
@@ -108,6 +148,7 @@ export default function NewProductPage() {
         stock_quantity: parseInt(form.stock_quantity || '0'),
         low_stock_threshold: parseInt(form.low_stock_threshold || '5'),
         category_id: form.category_id || null,
+        image_url: form.image_url || null,
       })
       .select()
       .single()
@@ -144,6 +185,7 @@ export default function NewProductPage() {
       return
     }
 
+    showToast(`${form.name} added`)
     router.push('/dashboard/products')
     router.refresh()
   }
@@ -162,6 +204,38 @@ export default function NewProductPage() {
         {error && (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
         )}
+
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Photo</label>
+          <div className="mt-2 flex items-center gap-4">
+            {form.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.image_url} alt="" className="h-14 w-14 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-neutral-300 dark:border-neutral-700 dark:text-neutral-600">
+                <Upload size={20} />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              {uploading ? 'Uploading…' : form.image_url ? 'Replace photo' : 'Upload photo'}
+            </button>
+            {form.image_url && (
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, image_url: '' }))}
+                className="text-sm text-red-500 hover:underline dark:text-red-400"
+              >
+                Remove
+              </button>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </div>
+        </div>
 
         <div>
           <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">

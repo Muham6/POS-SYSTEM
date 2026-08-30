@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/toast-provider'
+import { Upload } from 'lucide-react'
 
 type Unit = {
   id: string
@@ -18,11 +20,14 @@ export default function EditProductPage() {
   const params = useParams()
   const productId = params.id as string
   const supabase = createClient()
+  const { showToast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState('')
   const [loadError, setLoadError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [originalStock, setOriginalStock] = useState(0)
   const [adjustNote, setAdjustNote] = useState('')
@@ -34,6 +39,7 @@ export default function EditProductPage() {
     stock_quantity: '',
     low_stock_threshold: '',
     category_id: '',
+    image_url: '',
   })
 
   const [units, setUnits] = useState<Unit[]>([])
@@ -67,6 +73,7 @@ export default function EditProductPage() {
           stock_quantity: String(product.stock_quantity ?? ''),
           low_stock_threshold: String(product.low_stock_threshold ?? ''),
           category_id: product.category_id || '',
+          image_url: product.image_url || '',
         })
         setOriginalStock(product.stock_quantity ?? 0)
       }
@@ -78,6 +85,40 @@ export default function EditProductPage() {
   }, [productId, supabase])
 
   const baseUnit = units.find((u) => u.is_base_unit)
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file (PNG, JPG, etc).')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be under 2MB.')
+      return
+    }
+
+    setUploading(true)
+    setError('')
+
+    const ext = file.name.split('.').pop()
+    const path = `product-${Date.now()}.${ext}`
+
+    const { error: uploadError } = await supabase.storage.from('store-assets').upload(path, file, {
+      upsert: true,
+    })
+
+    if (uploadError) {
+      setUploading(false)
+      setError(uploadError.message)
+      return
+    }
+
+    const { data: publicUrl } = supabase.storage.from('store-assets').getPublicUrl(path)
+    setForm((f) => ({ ...f, image_url: publicUrl.publicUrl }))
+    setUploading(false)
+  }
 
   async function handleUpdateBasePrice(newPrice: string) {
     if (!baseUnit) return
@@ -127,6 +168,7 @@ export default function EditProductPage() {
     setNewUnitName('')
     setNewUnitConversion('')
     setNewUnitPrice('')
+    showToast('Unit added')
   }
 
   async function handleUpdateUnit(unitId: string, patch: Partial<Unit>) {
@@ -172,6 +214,7 @@ export default function EditProductPage() {
         cost_price: form.cost_price ? parseFloat(form.cost_price) : null,
         low_stock_threshold: parseInt(form.low_stock_threshold || '5'),
         category_id: form.category_id || null,
+        image_url: form.image_url || null,
       })
       .eq('id', productId)
 
@@ -196,6 +239,7 @@ export default function EditProductPage() {
     }
 
     setLoading(false)
+    showToast('Changes saved')
     router.push('/dashboard/products')
     router.refresh()
   }
@@ -246,6 +290,38 @@ export default function EditProductPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Photo</label>
+          <div className="mt-2 flex items-center gap-4">
+            {form.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.image_url} alt="" className="h-14 w-14 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-neutral-300 dark:border-neutral-700 dark:text-neutral-600">
+                <Upload size={20} />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              {uploading ? 'Uploading…' : form.image_url ? 'Replace photo' : 'Upload photo'}
+            </button>
+            {form.image_url && (
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, image_url: '' }))}
+                className="text-sm text-red-500 hover:underline dark:text-red-400"
+              >
+                Remove
+              </button>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </div>
+        </div>
+
         <div>
           <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Product name</label>
           <input

@@ -223,21 +223,34 @@ export default function HelpAssistant() {
       {open && (
         <div
           style={panelStyle}
-          className={`fixed z-40 flex max-h-[70vh] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-900 ${
+          className={`fixed z-50 flex max-h-[70vh] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-900 ${
             panelStyle ? '' : 'inset-x-4 bottom-20 sm:inset-x-auto sm:right-6 sm:w-96 lg:bottom-24'
           }`}
         >
           <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Help</p>
-            {aiConfigured === false && (
-              <span className="text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-500">FAQ mode</span>
-            )}
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Help</p>
+              {aiConfigured === false && (
+                <span className="text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-500">FAQ mode</span>
+              )}
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close help"
+              className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+            >
+              <X size={16} />
+            </button>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             {messages.length === 0 && (
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">Ask me anything about using this app.</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  {aiConfigured === false
+                    ? "Ask about selling, stock, shifts, suppliers, or settings — I'm running in offline FAQ mode (no AI key set up), so I match your question against a short list of built-in answers rather than understanding free-form questions."
+                    : 'Ask me anything about using this app.'}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SUGGESTED.map((q) => (
                     <button

@@ -6,8 +6,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Run on every route EXCEPT static files and images.
+  // Run on every route EXCEPT static files, images, and the PWA icon/manifest routes
+  // (browsers fetch these even on the public login page, unauthenticated).
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon-192|icon-512|apple-icon|icon|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

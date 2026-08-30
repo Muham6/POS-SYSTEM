@@ -8,3 +8,15 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* Tuned for thermal receipt printers (58/80mm rolls) rather than a full A4 page. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body {
+    background: white;
+  }
+}

@@ -11,6 +11,7 @@ type Product = {
   price: number
   stock_quantity: number
   low_stock_threshold: number
+  image_url: string | null
   categories: { name: string } | null
 }
 
@@ -25,7 +26,7 @@ export default async function ProductsPage({
   let query = supabase
     .from('products')
     .select(
-      `id, name, sku, price, stock_quantity, low_stock_threshold, is_active, category_id, categories ( name )`
+      `id, name, sku, price, stock_quantity, low_stock_threshold, image_url, is_active, category_id, categories ( name )`
     )
     .eq('is_active', true)
     .order('name')
@@ -105,8 +106,22 @@ export default async function ProductsPage({
                       lowStock ? 'bg-red-50 dark:bg-red-950/40' : ''
                     }`}
                   >
-                    <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
-                      {p.name}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {p.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={p.image_url}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800"
+                          />
+                        ) : (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-dashed border-neutral-200 text-neutral-300 dark:border-neutral-700 dark:text-neutral-600">
+                            <Package size={16} />
+                          </div>
+                        )}
+                        <span className="font-medium text-neutral-900 dark:text-neutral-100">{p.name}</span>
+                      </div>
                     </td>
 
                     <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">

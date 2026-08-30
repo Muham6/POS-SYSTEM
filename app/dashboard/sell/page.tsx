@@ -4,6 +4,16 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Receipt from '@/components/receipt'
 import { queueSale } from '@/lib/offline-queue'
+import {
+  loadActiveDraft,
+  saveActiveDraft,
+  clearActiveDraft,
+  getHeldSales,
+  holdSale,
+  removeHeldSale,
+  type HeldSale,
+} from '@/lib/held-sales'
+import { PauseCircle, X, Package } from 'lucide-react'
 
 type Product = {
   id: string
@@ -11,6 +21,7 @@ type Product = {
   sku: string | null
   stock_quantity: number
   is_active: boolean
+  image_url: string | null
 }
 
 type Unit = {
@@ -88,18 +99,50 @@ export default function SellPage() {
   const [mobileCartOpen, setMobileCartOpen] = useState(false)
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
 
+  const [heldSales, setHeldSales] = useState<HeldSale[]>([])
+  const [hydrated, setHydrated] = useState(false)
+
   useEffect(() => {
     loadProducts()
     loadCustomers()
+    hydrateFromStorage()
     supabase.from('store_settings').select('*').eq('id', 1).single().then(({ data }) => setStoreSettings(data))
     searchRef.current?.focus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Restore whatever was mid-sale before a refresh or navigating away — a
+  // cashier interrupted mid-checkout shouldn't lose the cart they built.
+  function hydrateFromStorage() {
+    const draft = loadActiveDraft()
+    if (draft) {
+      setCart(draft.cart)
+      setDiscount(draft.discount)
+      setCashAmount(draft.cashAmount)
+      setCardAmount(draft.cardAmount)
+      setTransferAmount(draft.transferAmount)
+      setSelectedCustomer(draft.selectedCustomer)
+    }
+    setHeldSales(getHeldSales())
+    setHydrated(true)
+  }
+
+  // Keep the active draft in sync so a refresh or accidental navigation never loses it.
+  useEffect(() => {
+    if (!hydrated) return
+    const isEmpty =
+      cart.length === 0 && !selectedCustomer && !discount && !cashAmount && !cardAmount && !transferAmount
+    if (isEmpty) {
+      clearActiveDraft()
+      return
+    }
+    saveActiveDraft({ cart, discount, cashAmount, cardAmount, transferAmount, selectedCustomer })
+  }, [hydrated, cart, discount, cashAmount, cardAmount, transferAmount, selectedCustomer])
+
   async function loadProducts() {
     const { data: productData } = await supabase
       .from('products')
-      .select('id, name, sku, stock_quantity, is_active')
+      .select('id, name, sku, stock_quantity, is_active, image_url')
       .eq('is_active', true)
       .order('name')
     setProducts(productData || [])
@@ -294,6 +337,50 @@ export default function SellPage() {
     setTransferAmount('')
     setSelectedCustomer(null)
     setCustomerSearch('')
+    clearActiveDraft()
+  }
+
+  function currentDraft() {
+    return { cart, discount, cashAmount, cardAmount, transferAmount, selectedCustomer }
+  }
+
+  function labelForHeldSale() {
+    return selectedCustomer?.name || selectedCustomer?.company_or_store || `Sale ${heldSales.length + 1}`
+  }
+
+  // Park the current cart so this cashier can attend to a different customer
+  // without losing what's already in progress.
+  function handleHoldSale() {
+    if (cart.length === 0) return
+    holdSale(currentDraft(), labelForHeldSale())
+    resetCartState()
+    setHeldSales(getHeldSales())
+  }
+
+  // Bring a parked cart back to the front. If something else is already being
+  // worked on, that gets parked too rather than silently overwritten.
+  function handleResumeSale(id: string) {
+    const target = getHeldSales().find((s) => s.id === id)
+    if (!target) return
+
+    if (cart.length > 0) {
+      holdSale(currentDraft(), labelForHeldSale())
+    }
+
+    removeHeldSale(id)
+    setCart(target.cart)
+    setDiscount(target.discount)
+    setCashAmount(target.cashAmount)
+    setCardAmount(target.cardAmount)
+    setTransferAmount(target.transferAmount)
+    setSelectedCustomer(target.selectedCustomer)
+    setMobileCartOpen(true)
+    setHeldSales(getHeldSales())
+  }
+
+  function handleDiscardHeldSale(id: string) {
+    removeHeldSale(id)
+    setHeldSales(getHeldSales())
   }
 
   async function handleCheckout() {
@@ -426,22 +513,32 @@ export default function SellPage() {
                 key={p.id}
                 onClick={() => addToCart(p)}
                 disabled={outOfStock}
-                className={`rounded-xl border p-3 text-left transition ${
+                className={`overflow-hidden rounded-xl border text-left transition ${
                   outOfStock
                     ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 opacity-50 dark:border-neutral-800 dark:bg-neutral-800'
                     : 'border-neutral-200 bg-white hover:border-emerald-400 hover:shadow-sm active:scale-[0.98] dark:border-neutral-800 dark:bg-neutral-900'
                 }`}
               >
-                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{p.name}</p>
-                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                  {baseUnit ? `₦${Number(baseUnit.price).toLocaleString()} / ${baseUnit.unit_name}` : 'No price set'}
-                </p>
-                <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-                  {outOfStock ? 'Out of stock' : `${p.stock_quantity} ${baseUnit?.unit_name}(s) left`}
-                </p>
-                {units.length > 1 && (
-                  <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">{units.length} units available</p>
-                )}
+                <div className="flex aspect-square items-center justify-center bg-neutral-50 dark:bg-neutral-800">
+                  {p.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.image_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <Package size={28} className="text-neutral-300 dark:text-neutral-600" />
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{p.name}</p>
+                  <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                    {baseUnit ? `₦${Number(baseUnit.price).toLocaleString()} / ${baseUnit.unit_name}` : 'No price set'}
+                  </p>
+                  <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                    {outOfStock ? 'Out of stock' : `${p.stock_quantity} ${baseUnit?.unit_name}(s) left`}
+                  </p>
+                  {units.length > 1 && (
+                    <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">{units.length} units available</p>
+                  )}
+                </div>
               </button>
             )
           })}
@@ -467,9 +564,43 @@ export default function SellPage() {
         </button>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-            Cart ({cart.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              Cart ({cart.length})
+            </h2>
+            {cart.length > 0 && (
+              <button
+                onClick={handleHoldSale}
+                className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:underline dark:text-amber-400"
+                title="Park this cart to attend to another customer"
+              >
+                <PauseCircle size={14} />
+                Hold
+              </button>
+            )}
+          </div>
+
+          {heldSales.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2 border-b border-neutral-100 pb-3 dark:border-neutral-800">
+              {heldSales.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 pl-3 pr-1 py-1 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+                >
+                  <button onClick={() => handleResumeSale(s.id)} className="font-medium hover:underline">
+                    {s.label} · {s.cart.length} item{s.cart.length === 1 ? '' : 's'}
+                  </button>
+                  <button
+                    onClick={() => handleDiscardHeldSale(s.id)}
+                    aria-label={`Discard held sale ${s.label}`}
+                    className="rounded-full p-0.5 text-amber-500 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-900/40"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {cart.length === 0 ? (
             <p className="mt-4 text-sm text-neutral-400 dark:text-neutral-500">Tap a product to add it.</p>

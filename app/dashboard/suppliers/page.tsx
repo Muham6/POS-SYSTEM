@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/toast-provider'
 import { Truck, Pencil, Trash2 } from 'lucide-react'
 
 type Supplier = {
@@ -16,6 +17,7 @@ type Supplier = {
 
 export default function SuppliersPage() {
   const supabase = createClient()
+  const { showToast } = useToast()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Supplier | null>(null)
@@ -79,6 +81,7 @@ export default function SuppliersPage() {
     }
 
     setShowForm(false)
+    showToast(editing ? 'Supplier updated' : 'Supplier added')
     load()
   }
 
@@ -89,6 +92,7 @@ export default function SuppliersPage() {
       setError(error.message)
       return
     }
+    showToast(s.is_active ? `${s.name} deactivated` : `${s.name} reactivated`)
     load()
   }
 

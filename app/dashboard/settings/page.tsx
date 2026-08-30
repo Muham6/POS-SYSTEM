@@ -3,16 +3,17 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Receipt from '@/components/receipt'
+import { useToast } from '@/components/toast-provider'
 import { Upload } from 'lucide-react'
 
 export default function SettingsPage() {
   const supabase = createClient()
+  const { showToast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [form, setForm] = useState({
     store_name: '',
     address: '',
@@ -84,7 +85,6 @@ export default function SettingsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    setSuccess('')
     setSaving(true)
 
     const { error } = await supabase
@@ -98,7 +98,7 @@ export default function SettingsPage() {
       setError(error.message)
       return
     }
-    setSuccess('Saved. Changes apply everywhere immediately.')
+    showToast('Saved — changes apply everywhere immediately.')
   }
 
   if (loading) {
@@ -113,11 +113,6 @@ export default function SettingsPage() {
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
           {error && (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>
-          )}
-          {success && (
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-              {success}
-            </p>
           )}
 
           <div>

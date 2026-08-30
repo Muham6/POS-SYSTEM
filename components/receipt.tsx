@@ -1,5 +1,7 @@
 'use client'
 
+import { Share2 } from 'lucide-react'
+
 type ReceiptItem = {
   product_name: string
   quantity: number
@@ -44,9 +46,34 @@ export default function Receipt({
   voided?: boolean
   onNewSale?: () => void
 }) {
+  function buildShareText() {
+    const lines = [
+      storeSettings?.store_name || 'Receipt',
+      saleNumber,
+      dateLabel,
+      customerLabel ? `Customer: ${customerLabel}` : null,
+      '',
+      ...items.map((i) => `${i.product_name} x${i.quantity} ${i.unit_name || ''} — ₦${(i.price * i.quantity).toLocaleString()}`),
+      '',
+      `Subtotal: ₦${subtotal.toLocaleString()}`,
+      discount > 0 ? `Discount: −₦${discount.toLocaleString()}` : null,
+      `Total: ₦${total.toLocaleString()}`,
+      '',
+      cash > 0 ? `Cash: ₦${cash.toLocaleString()}` : null,
+      card > 0 ? `Card: ₦${card.toLocaleString()}` : null,
+      transfer > 0 ? `Transfer: ₦${transfer.toLocaleString()}` : null,
+      storeSettings?.footer_message ? `\n${storeSettings.footer_message}` : null,
+    ]
+    return lines.filter((l) => l !== null).join('\n')
+  }
+
+  function shareToWhatsApp() {
+    window.open(`https://wa.me/?text=${encodeURIComponent(buildShareText())}`, '_blank')
+  }
+
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 font-mono">
+    <div className="mx-auto max-w-md print:max-w-none">
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 font-mono print:rounded-none print:border-0 print:p-2 print:shadow-none">
         {voided && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
             VOIDED
@@ -115,6 +142,13 @@ export default function Receipt({
             className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
           >
             Print
+          </button>
+          <button
+            onClick={shareToWhatsApp}
+            aria-label="Share receipt via WhatsApp"
+            className="flex items-center justify-center rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
+          >
+            <Share2 size={18} />
           </button>
           {onNewSale && (
             <button

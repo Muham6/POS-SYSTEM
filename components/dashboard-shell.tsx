@@ -8,6 +8,7 @@ import SignOutButton from '@/components/sign-out-button'
 import OnlineStatusBanner from '@/components/online-status-banner'
 import HelpAssistant from '@/components/help-assistant'
 import NavTour from '@/components/nav-tour'
+import ToastProvider from '@/components/toast-provider'
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -96,28 +97,30 @@ export default function DashboardShell({
   )
 
   return (
+    <ToastProvider>
     <div className="flex min-h-screen flex-col">
-      <OnlineStatusBanner />
-
-      <NavTour
-        key={tourKey}
-        steps={links.map((l) => ({ href: l.href, label: l.label }))}
-        storageKey={tourStorageKey}
-        active={tourActive}
-        onFinish={() => setTourActive(false)}
-      />
-      <HelpAssistant />
+      <div className="print:hidden">
+        <OnlineStatusBanner />
+        <NavTour
+          key={tourKey}
+          steps={links.map((l) => ({ href: l.href, label: l.label }))}
+          storageKey={tourStorageKey}
+          active={tourActive}
+          onFinish={() => setTourActive(false)}
+        />
+        <HelpAssistant />
+      </div>
 
       <div className="flex flex-1 bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/40 lg:hidden print:hidden"
             onClick={() => setMenuOpen(false)}
           />
         )}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col justify-between border-r border-neutral-200 bg-white p-5 transition-transform dark:border-neutral-800 dark:bg-neutral-900 lg:static lg:translate-x-0 ${
+          className={`print:hidden fixed inset-y-0 left-0 z-50 flex w-60 flex-col justify-between border-r border-neutral-200 bg-white p-5 transition-transform dark:border-neutral-800 dark:bg-neutral-900 lg:static lg:translate-x-0 ${
             sidebarOpen
               ? 'translate-x-0'
               : '-translate-x-full'
@@ -190,7 +193,7 @@ export default function DashboardShell({
         </aside>
 
         <div className="flex flex-1 flex-col pb-16 lg:pb-0">
-          <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
+          <header className="print:hidden flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
             <button
               onClick={() => setMenuOpen(true)}
               className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 lg:hidden"
@@ -219,13 +222,13 @@ export default function DashboardShell({
             </div>
           </header>
 
-          <main className="flex-1 p-4 sm:p-8">
+          <main className="flex-1 p-4 sm:p-8 print:p-0">
             {children}
           </main>
         </div>
 
         {/* Mobile bottom tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 lg:hidden">
+        <nav className="print:hidden fixed inset-x-0 bottom-0 z-30 flex border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 lg:hidden">
           {mobileTabs.map((link) => {
             const active = pathname === link.href
             const Icon =
@@ -251,5 +254,6 @@ export default function DashboardShell({
         </nav>
       </div>
     </div>
+    </ToastProvider>
   )
 }

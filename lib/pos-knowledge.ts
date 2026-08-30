@@ -102,11 +102,69 @@ export const POS_FAQ: FaqEntry[] = [
     answer:
       'Cashiers can sell and manage their own shift. Admins can additionally manage products, stock, suppliers, sales history, shift history, reports, users, and settings.',
   },
+  {
+    question: 'What can this assistant help with?',
+    keywords: ['hello', 'hi', 'hey', 'help', 'what can you do', 'what do you do'],
+    answer:
+      "I can answer questions about using this app — selling, stock, shifts, suppliers, customers, and settings. Try one of the suggested questions, or ask about a specific screen.",
+  },
+  {
+    question: 'How do I search for a product?',
+    keywords: ['search product', 'find product', 'search item', 'scan', 'barcode'],
+    answer:
+      'On the Sell screen, type into the search box at the top — it matches product name or SKU as you type. A barcode scanner works too: it types the code in like a keyboard, so scanning while the search box is focused finds the item automatically.',
+  },
+  {
+    question: 'How do I hold a sale to attend to another customer?',
+    keywords: ['hold sale', 'park sale', 'another customer', 'pause sale', 'switch customer', 'multiple customer'],
+    answer:
+      'On Sell, tap "Hold" above the cart to park the current cart and start fresh. Held sales show as chips above the cart — tap one to bring it back (if you have something else in progress, that gets parked too, so nothing is lost).',
+  },
+  {
+    question: 'Will I lose my cart if I refresh or leave the Sell page?',
+    keywords: ['refresh', 'lose cart', 'reload', 'navigate away', 'leave page'],
+    answer:
+      "No — whatever's in your cart, including the customer and payment amounts, is saved automatically and restored if you refresh the page or come back to Sell later.",
+  },
+  {
+    question: 'How do I delete or deactivate a product?',
+    keywords: ['delete product', 'remove product', 'deactivate product'],
+    answer:
+      'Open the product from Products (admin only) — there\'s a delete/deactivate option there. Deactivating hides it from the Sell screen without losing its sales history.',
+  },
+  {
+    question: 'How do I export data to CSV?',
+    keywords: ['export', 'csv', 'download', 'spreadsheet'],
+    answer:
+      'Sales History and Stock History (admin only) each have a CSV export option so you can open your records in Excel or Google Sheets.',
+  },
+  {
+    question: 'How do I restart the guided tour?',
+    keywords: ['tour', 'guided tour', 'walkthrough', 'onboarding'],
+    answer:
+      'Tap the small "?" icon next to Sign Out in the top-right header — it restarts the sidebar tour any time.',
+  },
+  {
+    question: 'Does this app support dark mode?',
+    keywords: ['dark mode', 'light mode', 'theme', 'night mode'],
+    answer:
+      "Yes — it automatically follows your device or browser's dark/light setting. There's no in-app toggle; change it in your system settings and this app will match.",
+  },
+  {
+    question: 'What currency does this use?',
+    keywords: ['currency', 'naira', 'dollar'],
+    answer: 'Everything is priced in Nigerian Naira (₦).',
+  },
+  {
+    question: 'Thanks',
+    keywords: ['thank you', 'thanks', 'appreciate'],
+    answer: "You're welcome! Anything else you'd like to know about the app?",
+  },
 ]
 
 export const APP_OVERVIEW = `This is a point-of-sale (POS) system for a retail store, priced in Naira (₦). Main areas:
 - Overview: today's sales, profit, and low-stock count (admin), or a quick link to start selling (cashier).
-- Sell: the checkout screen — search/scan products, build a cart, split payment across cash/card/transfer, optionally attach a customer, complete the sale. Works offline and syncs automatically later.
+- Sell: the checkout screen — search/scan products, build a cart, split payment across cash/card/transfer, optionally attach a customer, complete the sale. Works offline and syncs automatically later. The cart is saved automatically (survives a refresh), and a cart can be "held" to attend to another customer, then resumed later.
 - Shift: cashiers open/close their work shift; Shift History (admin) reviews past shifts.
 - Products (admin): manage the product catalog, prices, and units.
 - Stock History (admin): view stock movements, receive new stock from a supplier, and run stock takes/counts.

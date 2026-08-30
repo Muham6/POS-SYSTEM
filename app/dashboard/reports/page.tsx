@@ -8,6 +8,15 @@ type LowStockProduct = {
   stock_quantity: number
 }
 
+type PaymentRow = {
+  cash_amount: number
+  card_amount: number
+  transfer_amount: number
+  created_at: string
+  cashier_id: string | null
+  profiles: { full_name: string } | null
+}
+
 export default async function ReportsPage() {
   const supabase = await createClient()
 
@@ -42,7 +51,7 @@ export default async function ReportsPage() {
 
     supabase
       .from('sales')
-      .select('cash_amount, card_amount, transfer_amount, created_at')
+      .select('cash_amount, card_amount, transfer_amount, created_at, cashier_id, profiles ( full_name )')
       .eq('status', 'completed')
       .gte('created_at', `${weekAgo}T00:00:00`),
 
@@ -70,6 +79,19 @@ export default async function ReportsPage() {
 
   const todayProfitRow = (profitRows || []).find((r) => r.sale_day === today)
   const weekProfit = (profitRows || []).reduce((sum, r) => sum + Number(r.profit || 0), 0)
+
+  const typedPaymentRows = (paymentRows as unknown as PaymentRow[]) || []
+
+  const cashierTotals: Record<string, { name: string; revenue: number; count: number }> = {}
+  typedPaymentRows.forEach((row) => {
+    const key = row.cashier_id || 'unknown'
+    const name = row.profiles?.full_name || 'Unknown'
+    if (!cashierTotals[key]) cashierTotals[key] = { name, revenue: 0, count: 0 }
+    cashierTotals[key].revenue +=
+      (Number(row.cash_amount) || 0) + (Number(row.card_amount) || 0) + (Number(row.transfer_amount) || 0)
+    cashierTotals[key].count += 1
+  })
+  const cashierBreakdown = Object.values(cashierTotals).sort((a, b) => b.revenue - a.revenue)
 
   const paymentTotals = (paymentRows || []).reduce(
     (acc, row) => {
@@ -311,6 +333,27 @@ export default async function ReportsPage() {
               </span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          Sales by cashier (last 7 days)
+        </h2>
+
+        <div className="mt-3 space-y-2">
+          {cashierBreakdown.map((c) => (
+            <div key={c.name} className="flex justify-between text-sm">
+              <span className="text-neutral-700 dark:text-neutral-300">
+                {c.name} <span className="text-neutral-400 dark:text-neutral-500">· {c.count} sale{c.count === 1 ? '' : 's'}</span>
+              </span>
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">₦{c.revenue.toLocaleString()}</span>
+            </div>
+          ))}
+
+          {cashierBreakdown.length === 0 && (
+            <p className="text-sm text-neutral-400 dark:text-neutral-500">No sales yet.</p>
+          )}
         </div>
       </div>
 

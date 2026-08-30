@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Receipt from '@/components/receipt'
 import { useToast } from '@/components/toast-provider'
+import PushNotifications from '@/components/push-notifications'
 import { Upload } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -238,6 +239,17 @@ export default function SettingsPage() {
               return_policy: form.return_policy,
             }}
           />
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Low stock alerts</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          Get notified on this device the moment a sale drops something below its reorder threshold. This is
+          per-device — enable it on every device you want alerts on.
+        </p>
+        <div className="mt-3">
+          <PushNotifications />
         </div>
       </div>
     </div>

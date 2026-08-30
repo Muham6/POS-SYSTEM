@@ -22,6 +22,7 @@ type Product = {
   stock_quantity: number
   is_active: boolean
   image_url: string | null
+  low_stock_threshold: number
 }
 
 type Unit = {
@@ -42,6 +43,7 @@ type CartItem = {
   quantity: number
   conversion_to_base: number
   stock_quantity: number // base units available for this product
+  low_stock_threshold: number
 }
 
 type Customer = {
@@ -142,7 +144,7 @@ export default function SellPage() {
   async function loadProducts() {
     const { data: productData } = await supabase
       .from('products')
-      .select('id, name, sku, stock_quantity, is_active, image_url')
+      .select('id, name, sku, stock_quantity, is_active, image_url, low_stock_threshold')
       .eq('is_active', true)
       .order('name')
     setProducts(productData || [])
@@ -208,6 +210,7 @@ export default function SellPage() {
           quantity: 1,
           conversion_to_base: baseUnit.conversion_to_base,
           stock_quantity: product.stock_quantity,
+          low_stock_threshold: product.low_stock_threshold,
         },
       ]
     })
@@ -383,6 +386,30 @@ export default function SellPage() {
     setHeldSales(getHeldSales())
   }
 
+  // Fires a push notification for any item this sale just dropped to/below its
+  // reorder threshold — only fires on the actual crossing, not every sale after.
+  function notifyIfLowStock(items: CartItem[]) {
+    const crossed = items
+      .filter((i) => {
+        const postStock = i.stock_quantity - i.quantity * i.conversion_to_base
+        return i.stock_quantity > i.low_stock_threshold && postStock <= i.low_stock_threshold
+      })
+      .map((i) => ({
+        name: i.product_name,
+        stock_quantity: Math.max(i.stock_quantity - i.quantity * i.conversion_to_base, 0),
+      }))
+
+    if (crossed.length === 0) return
+
+    fetch('/api/notify-low-stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: crossed }),
+    }).catch(() => {
+      // Best-effort — a notification failure should never affect the sale itself.
+    })
+  }
+
   async function handleCheckout() {
     if (loading) return
     if (cart.length === 0) return
@@ -442,6 +469,7 @@ export default function SellPage() {
         transfer,
         customer: selectedCustomer,
       })
+      notifyIfLowStock(cart)
       resetCartState()
       loadProducts()
     } catch {

@@ -13,6 +13,7 @@ export type HeldCartItem = {
   quantity: number
   conversion_to_base: number
   stock_quantity: number
+  low_stock_threshold: number
 }
 
 export type HeldCustomer = {

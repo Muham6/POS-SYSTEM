@@ -61,6 +61,7 @@ type StoreSettings = {
   phone: string | null
   footer_message: string | null
   return_policy: string | null
+  vat_rate: number | null
 }
 
 export default function SellPage() {

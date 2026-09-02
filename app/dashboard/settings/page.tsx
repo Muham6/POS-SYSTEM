@@ -22,6 +22,7 @@ export default function SettingsPage() {
     footer_message: '',
     return_policy: '',
     logo_url: '',
+    vat_rate: '',
   })
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function SettingsPage() {
             footer_message: data.footer_message || '',
             return_policy: data.return_policy || '',
             logo_url: data.logo_url || '',
+            vat_rate: data.vat_rate ? String(data.vat_rate) : '',
           })
         }
         setLoading(false)
@@ -90,7 +92,11 @@ export default function SettingsPage() {
 
     const { error } = await supabase
       .from('store_settings')
-      .update({ ...form, updated_at: new Date().toISOString() })
+      .update({
+        ...form,
+        vat_rate: form.vat_rate ? parseFloat(form.vat_rate) : null,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', 1)
 
     setSaving(false)
@@ -205,6 +211,25 @@ export default function SettingsPage() {
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              VAT rate (%, optional)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.vat_rate}
+              onChange={(e) => setForm({ ...form, vat_rate: e.target.value })}
+              placeholder="e.g. 7.5"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+            />
+            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+              Your prices already include VAT — this only adds an informational breakdown line to receipts. It
+              doesn&apos;t change what customers pay. Leave blank to hide it entirely.
+            </p>
+          </div>
+
           <button
             type="submit"
             disabled={saving}
@@ -237,6 +262,7 @@ export default function SettingsPage() {
               phone: form.phone,
               footer_message: form.footer_message,
               return_policy: form.return_policy,
+              vat_rate: form.vat_rate ? parseFloat(form.vat_rate) : null,
             }}
           />
         </div>

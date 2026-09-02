@@ -15,6 +15,7 @@ type StoreSettings = {
   phone: string | null
   footer_message: string | null
   return_policy: string | null
+  vat_rate?: number | null
 } | null
 
 export default function Receipt({
@@ -46,6 +47,12 @@ export default function Receipt({
   voided?: boolean
   onNewSale?: () => void
 }) {
+  // VAT-inclusive pricing: prices already include VAT, so this is just an
+  // informational breakdown backed out of the total — it never changes what's
+  // charged, so it needs no changes to how a sale's total is computed or validated.
+  const vatRate = storeSettings?.vat_rate || 0
+  const vatAmount = vatRate > 0 ? total - total / (1 + vatRate / 100) : 0
+
   function buildShareText() {
     const lines = [
       storeSettings?.store_name || 'Receipt',
@@ -58,6 +65,7 @@ export default function Receipt({
       `Subtotal: ₦${subtotal.toLocaleString()}`,
       discount > 0 ? `Discount: −₦${discount.toLocaleString()}` : null,
       `Total: ₦${total.toLocaleString()}`,
+      vatAmount > 0 ? `(Includes VAT ${vatRate}%: ₦${vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })})` : null,
       '',
       cash > 0 ? `Cash: ₦${cash.toLocaleString()}` : null,
       card > 0 ? `Card: ₦${card.toLocaleString()}` : null,
@@ -117,6 +125,12 @@ export default function Receipt({
             <span>TOTAL</span>
             <span>₦{total.toLocaleString()}</span>
           </div>
+          {vatAmount > 0 && (
+            <div className="flex justify-between text-xs text-neutral-400">
+              <span>Includes VAT ({vatRate}%)</span>
+              <span>₦{vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            </div>
+          )}
         </div>
 
         <div className="mt-2 space-y-1 text-right text-xs text-neutral-400">

@@ -57,6 +57,13 @@ export default async function ProductsPage({
           />
 
           <Link
+            href="/dashboard/products/import"
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          >
+            Import CSV
+          </Link>
+
+          <Link
             href="/dashboard/products/new"
             className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
           >

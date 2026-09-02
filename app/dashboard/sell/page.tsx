@@ -13,7 +13,9 @@ import {
   removeHeldSale,
   type HeldSale,
 } from '@/lib/held-sales'
-import { PauseCircle, X, Package } from 'lucide-react'
+import { PauseCircle, X, Package, Camera } from 'lucide-react'
+import BarcodeScanner from '@/components/barcode-scanner'
+import { useToast } from '@/components/toast-provider'
 
 type Product = {
   id: string
@@ -103,6 +105,10 @@ export default function SellPage() {
 
   const [heldSales, setHeldSales] = useState<HeldSale[]>([])
   const [hydrated, setHydrated] = useState(false)
+
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [scanNotFoundCode, setScanNotFoundCode] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   useEffect(() => {
     loadProducts()
@@ -214,6 +220,20 @@ export default function SellPage() {
         },
       ]
     })
+  }
+
+  // Handles a code decoded by the camera scanner. Matches against the already-loaded
+  // products list by exact, case-insensitive SKU — same list the product grid searches.
+  function handleBarcodeDetected(code: string) {
+    const match = products.find((p) => p.sku && p.sku.toLowerCase() === code.toLowerCase())
+    if (!match) {
+      setScanNotFoundCode(code)
+      return
+    }
+    addToCart(match)
+    showToast(`Added ${match.name} to cart`)
+    setScanNotFoundCode(null)
+    setScannerOpen(false)
   }
 
   function maxQtyFor(item: CartItem) {
@@ -517,13 +537,27 @@ export default function SellPage() {
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       {/* Product picker */}
       <div className="flex-1">
-        <input
-          ref={searchRef}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search or scan product…"
-          className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-base outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
-        />
+        <div className="relative">
+          <input
+            ref={searchRef}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search or scan product…"
+            className="w-full rounded-lg border border-neutral-300 px-4 py-3 pr-12 text-base outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setScanNotFoundCode(null)
+              setScannerOpen(true)
+            }}
+            aria-label="Scan barcode with camera"
+            title="Scan barcode with camera"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-emerald-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-emerald-400"
+          >
+            <Camera size={20} />
+          </button>
+        </div>
 
         {!search.trim() && products.length > 30 && (
           <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
@@ -907,6 +941,17 @@ export default function SellPage() {
           <span>{cart.length} item{cart.length === 1 ? '' : 's'} in cart</span>
           <span>₦{total.toLocaleString()} · View Cart</span>
         </button>
+      )}
+
+      {scannerOpen && (
+        <BarcodeScanner
+          onDetected={handleBarcodeDetected}
+          onClose={() => {
+            setScannerOpen(false)
+            setScanNotFoundCode(null)
+          }}
+          notFoundCode={scanNotFoundCode}
+        />
       )}
     </div>
   )

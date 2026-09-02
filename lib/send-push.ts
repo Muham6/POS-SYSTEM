@@ -10,12 +10,11 @@ webpush.setVapidDetails(
 
 type LowStockItem = { name: string; stock_quantity: number }
 
-// Notifies every admin who has enabled alerts on a device. Uses the
-// service-role client since this needs to read subscriptions across all
-// admins, not just whoever triggered the sale that caused the alert.
-export async function notifyLowStock(items: LowStockItem[]) {
+// Shared by every notify* function: sends one payload to every admin
+// device that's opted in, and prunes subscriptions the push service
+// reports as dead (unsubscribed, expired, etc).
+async function notifyAdmins(payload: string) {
   if (!process.env.VAPID_PRIVATE_KEY || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return
-  if (items.length === 0) return
 
   const admin = createAdminClient()
 
@@ -25,14 +24,6 @@ export async function notifyLowStock(items: LowStockItem[]) {
     .eq('profiles.role', 'admin')
 
   if (!subs || subs.length === 0) return
-
-  const title = items.length === 1 ? `Low stock: ${items[0].name}` : `Low stock: ${items.length} products`
-  const body =
-    items.length === 1
-      ? `${items[0].stock_quantity} left — time to reorder.`
-      : items.map((i) => `${i.name} (${i.stock_quantity} left)`).join(', ')
-
-  const payload = JSON.stringify({ title, body, url: '/dashboard/products' })
 
   await Promise.all(
     subs.map(async (sub) => {
@@ -50,4 +41,36 @@ export async function notifyLowStock(items: LowStockItem[]) {
       }
     })
   )
+}
+
+// Notifies every admin who has enabled alerts on a device. Uses the
+// service-role client since this needs to read subscriptions across all
+// admins, not just whoever triggered the sale that caused the alert.
+export async function notifyLowStock(items: LowStockItem[]) {
+  if (items.length === 0) return
+
+  const title = items.length === 1 ? `Low stock: ${items[0].name}` : `Low stock: ${items.length} products`
+  const body =
+    items.length === 1
+      ? `${items[0].stock_quantity} left — time to reorder.`
+      : items.map((i) => `${i.name} (${i.stock_quantity} left)`).join(', ')
+
+  await notifyAdmins(JSON.stringify({ title, body, url: '/dashboard/products' }))
+}
+
+type ShiftCloseSummary = {
+  cashierName: string
+  expected: number
+  counted: number
+  variance: number
+}
+
+export async function notifyShiftClosed(summary: ShiftCloseSummary) {
+  const balanced = Math.abs(summary.variance) < 0.01
+  const title = `${summary.cashierName} closed their shift`
+  const body = balanced
+    ? `Balanced — ₦${summary.counted.toLocaleString()} counted.`
+    : `${summary.variance > 0 ? 'Over' : 'Short'} by ₦${Math.abs(summary.variance).toLocaleString()} — ₦${summary.counted.toLocaleString()} counted, ₦${summary.expected.toLocaleString()} expected.`
+
+  await notifyAdmins(JSON.stringify({ title, body, url: '/dashboard/shift/history' }))
 }

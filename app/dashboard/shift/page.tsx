@@ -93,10 +93,19 @@ export default function ShiftPage() {
       return
     }
     const expected = shift.opening_float + cashSoFar
-    setResult({ expected, counted, variance: counted - expected })
+    const variance = counted - expected
+    setResult({ expected, counted, variance })
     setShift(null)
     setCountedCash('')
     setNote('')
+
+    fetch('/api/notify-shift-close', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expected, counted, variance }),
+    }).catch(() => {
+      // Best-effort — a notification failure should never affect the shift close itself.
+    })
   }
 
   if (loading) return <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading shift…</p>

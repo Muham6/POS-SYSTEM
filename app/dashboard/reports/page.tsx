@@ -32,6 +32,7 @@ export default async function ReportsPage() {
     { data: topProducts, error: topProductsError },
     { data: paymentRows, error: paymentError },
     { data: profitRows, error: profitError },
+    { data: stockRows, error: stockError },
   ] = await Promise.all([
     supabase
       .from('daily_sales_summary')
@@ -59,9 +60,26 @@ export default async function ReportsPage() {
       .from('daily_profit_summary')
       .select('*')
       .gte('sale_day', weekAgo),
+
+    supabase
+      .from('products')
+      .select('stock_quantity, cost_price')
+      .eq('is_active', true),
   ])
 
-  const loadError = summaryError || lowStockError || topProductsError || paymentError || profitError
+  const loadError = summaryError || lowStockError || topProductsError || paymentError || profitError || stockError
+
+  const stockValuation = (stockRows || []).reduce(
+    (acc, p) => {
+      if (p.cost_price === null) {
+        acc.missingCostCount += 1
+      } else {
+        acc.total += Number(p.cost_price) * p.stock_quantity
+      }
+      return acc
+    },
+    { total: 0, missingCostCount: 0 }
+  )
 
   const rows = summary || []
 
@@ -146,7 +164,7 @@ export default async function ReportsPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
           <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Today
@@ -195,6 +213,20 @@ export default async function ReportsPage() {
           </p>
           <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
             Today: ₦{Number(todayProfitRow?.profit || 0).toLocaleString()} · approximate
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            Inventory value
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            ₦{stockValuation.total.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            {stockValuation.missingCostCount > 0
+              ? `Excludes ${stockValuation.missingCostCount} product${stockValuation.missingCostCount === 1 ? '' : 's'} with no cost price`
+              : 'At cost price'}
           </p>
         </div>
       </div>

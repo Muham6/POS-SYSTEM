@@ -192,19 +192,37 @@ export default function SellPage() {
     )
   }, [customerSearch, customers])
 
+  // Sums base-unit-equivalent quantity already committed to OTHER cart lines of
+  // the same product (e.g. a "carton" line and a "piece" line for one product),
+  // so splitting a product across multiple units can never let the combined
+  // cart claim more than real stock. excludeIndex lets a line check against
+  // everything BUT itself.
+  function baseUnitsCommitted(cartSnapshot: CartItem[], productId: string, excludeIndex?: number) {
+    return cartSnapshot.reduce((sum, item, i) => {
+      if (item.product_id !== productId || i === excludeIndex) return sum
+      return sum + item.quantity * item.conversion_to_base
+    }, 0)
+  }
+
+  function maxQtyFor(cartSnapshot: CartItem[], item: CartItem, index: number) {
+    const committedElsewhere = baseUnitsCommitted(cartSnapshot, item.product_id, index)
+    const remainingBase = Math.max(item.stock_quantity - committedElsewhere, 0)
+    return Math.floor(remainingBase / item.conversion_to_base)
+  }
+
   function addToCart(product: Product) {
     const units = unitsByProduct[product.id] || []
     const baseUnit = units.find((u) => u.is_base_unit)
     if (!baseUnit) return // product has no unit configured yet — shouldn't happen post-migration
 
-    if (product.stock_quantity < baseUnit.conversion_to_base) return
-
     setCart((prev) => {
-      const existing = prev.find((i) => i.product_id === product.id && i.unit_id === baseUnit.id)
-      if (existing) {
-        const maxQty = Math.floor(product.stock_quantity / baseUnit.conversion_to_base)
-        if (existing.quantity >= maxQty) return prev
-        return prev.map((i) => (i === existing ? { ...i, quantity: i.quantity + 1 } : i))
+      const committed = baseUnitsCommitted(prev, product.id)
+      const remainingBase = product.stock_quantity - committed
+      if (remainingBase < baseUnit.conversion_to_base) return prev
+
+      const existingIndex = prev.findIndex((i) => i.product_id === product.id && i.unit_id === baseUnit.id)
+      if (existingIndex !== -1) {
+        return prev.map((i, idx) => (idx === existingIndex ? { ...i, quantity: i.quantity + 1 } : i))
       }
       return [
         ...prev,
@@ -237,10 +255,6 @@ export default function SellPage() {
     setScannerOpen(false)
   }
 
-  function maxQtyFor(item: CartItem) {
-    return Math.floor(item.stock_quantity / item.conversion_to_base)
-  }
-
   function changeUnit(index: number, newUnitId: string) {
     setCart((prev) =>
       prev.map((item, i) => {
@@ -248,7 +262,9 @@ export default function SellPage() {
         const units = unitsByProduct[item.product_id] || []
         const newUnit = units.find((u) => u.id === newUnitId)
         if (!newUnit) return item
-        const newMax = Math.floor(item.stock_quantity / newUnit.conversion_to_base)
+        const committedElsewhere = baseUnitsCommitted(prev, item.product_id, index)
+        const remainingBase = Math.max(item.stock_quantity - committedElsewhere, 0)
+        const newMax = Math.floor(remainingBase / newUnit.conversion_to_base)
         return {
           ...item,
           unit_id: newUnit.id,
@@ -268,7 +284,7 @@ export default function SellPage() {
           if (i !== index) return item
           const newQty = item.quantity + delta
           if (newQty <= 0) return null
-          if (newQty > maxQtyFor(item)) return item
+          if (newQty > maxQtyFor(prev, item, index)) return item
           return { ...item, quantity: newQty }
         })
         .filter((i): i is CartItem => i !== null)
@@ -282,7 +298,7 @@ export default function SellPage() {
         if (rawValue === '') return { ...item, quantity: 0 as unknown as number }
         const parsed = parseInt(rawValue, 10)
         if (isNaN(parsed)) return item
-        const clamped = Math.min(Math.max(parsed, 0), maxQtyFor(item))
+        const clamped = Math.min(Math.max(parsed, 0), maxQtyFor(prev, item, index))
         return { ...item, quantity: clamped }
       })
     )
@@ -570,7 +586,8 @@ export default function SellPage() {
           {filtered.map((p) => {
             const units = unitsByProduct[p.id] || []
             const baseUnit = units.find((u) => u.is_base_unit)
-            const outOfStock = !baseUnit || p.stock_quantity < baseUnit.conversion_to_base
+            const remainingBase = baseUnit ? p.stock_quantity - baseUnitsCommitted(cart, p.id) : 0
+            const outOfStock = !baseUnit || remainingBase < baseUnit.conversion_to_base
             return (
               <button
                 key={p.id}
@@ -691,7 +708,7 @@ export default function SellPage() {
                         type="number"
                         inputMode="numeric"
                         min={1}
-                        max={maxQtyFor(item)}
+                        max={maxQtyFor(cart, item, index)}
                         value={item.quantity}
                         onChange={(e) => setQtyDirect(index, e.target.value)}
                         onBlur={(e) => {
@@ -702,7 +719,7 @@ export default function SellPage() {
                       />
                       <button
                         onClick={() => changeQty(index, 1)}
-                        disabled={item.quantity >= maxQtyFor(item)}
+                        disabled={item.quantity >= maxQtyFor(cart, item, index)}
                         aria-label={`Increase quantity of ${item.product_name}`}
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
                       >

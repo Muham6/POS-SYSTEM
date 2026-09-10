@@ -40,16 +40,30 @@ export default function OnlineStatusBanner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Two tabs can both come back online at the same moment and both see the
+  // same queued sale before either has removed it — without a cross-tab
+  // lock they'd both submit it, double-decrementing stock. navigator.locks
+  // is a real mutex across every tab on this origin, not just this component
+  // instance, so only one tab ever runs the flush at a time.
   async function flushQueue() {
-    if (syncLockRef.current) return
-    syncLockRef.current = true
-
-    const queue = getQueuedSales()
-
-    if (queue.length === 0) {
-      syncLockRef.current = false
+    if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+      await navigator.locks.request('pos-offline-sync', { ifAvailable: true }, async (lock) => {
+        if (!lock) return // another tab is already flushing — its run will cover this queue
+        await runFlush()
+      })
       return
     }
+
+    // Fallback for browsers without the Locks API: at least stays correct within this tab.
+    if (syncLockRef.current) return
+    syncLockRef.current = true
+    await runFlush()
+    syncLockRef.current = false
+  }
+
+  async function runFlush() {
+    const queue = getQueuedSales()
+    if (queue.length === 0) return
 
     setSyncing(true)
     let succeeded = 0
@@ -77,7 +91,6 @@ export default function OnlineStatusBanner() {
 
     setQueuedCount(getQueuedSales().length)
     setSyncing(false)
-    syncLockRef.current = false
 
     if (succeeded > 0) {
       setJustSynced(true)

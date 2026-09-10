@@ -40,7 +40,7 @@ export default function SettingsPage() {
             footer_message: data.footer_message || '',
             return_policy: data.return_policy || '',
             logo_url: data.logo_url || '',
-            vat_rate: data.vat_rate ? String(data.vat_rate) : '',
+            vat_rate: data.vat_rate !== null && data.vat_rate !== undefined ? String(data.vat_rate) : '',
           })
         }
         setLoading(false)

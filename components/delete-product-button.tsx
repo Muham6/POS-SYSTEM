@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Trash2 } from 'lucide-react'  // Add this import
+import { Trash2 } from 'lucide-react'
 
 export default function DeleteProductButton({
   productId,
@@ -65,10 +65,10 @@ export default function DeleteProductButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-red-600 hover:text-red-700 dark:text-red-300"  // Changed from hover:underline
-        title="Delete"  // Added title
+        className="text-red-600 hover:text-red-700 dark:text-red-300"
+        title="Delete"
       >
-        <Trash2 size={16} />  {/* Replaced text with icon */}
+        <Trash2 size={16} />
       </button>
 
       {open && (
@@ -77,7 +77,7 @@ export default function DeleteProductButton({
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Delete product</h3>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               This will remove <span className="font-medium text-neutral-800 dark:text-neutral-200">{productName}</span> from
-              the active product list. Confirm your admin password to continue.
+              the active product list. Confirm your password to continue.
             </p>
 
             <input

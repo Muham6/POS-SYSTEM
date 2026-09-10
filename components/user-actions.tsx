@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/toast-provider'
 import { KeyRound, UserX, UserCheck } from 'lucide-react'
 
 export default function UserActions({
@@ -16,6 +17,7 @@ export default function UserActions({
 }) {
   const router = useRouter()
   const supabase = createClient()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showReset, setShowReset] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -28,8 +30,13 @@ export default function UserActions({
     if (!confirm(isActive ? 'Deactivate this account?' : 'Reactivate this account?')) return
 
     setLoading(true)
-    await supabase.from('profiles').update({ is_active: !isActive }).eq('id', userId)
+    const { error } = await supabase.from('profiles').update({ is_active: !isActive }).eq('id', userId)
     setLoading(false)
+
+    if (error) {
+      showToast(error.message, 'error')
+      return
+    }
     router.refresh()
   }
 

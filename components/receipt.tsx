@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef, useState } from 'react'
+import { toPng } from 'html-to-image'
 import { Share2 } from 'lucide-react'
 
 type ReceiptItem = {
@@ -53,35 +55,72 @@ export default function Receipt({
   const vatRate = storeSettings?.vat_rate || 0
   const vatAmount = vatRate > 0 ? total - total / (1 + vatRate / 100) : 0
 
-  function buildShareText() {
-    const lines = [
-      storeSettings?.store_name || 'Receipt',
-      saleNumber,
-      dateLabel,
-      customerLabel ? `Customer: ${customerLabel}` : null,
-      '',
-      ...items.map((i) => `${i.product_name} x${i.quantity} ${i.unit_name || ''} — ₦${(i.price * i.quantity).toLocaleString()}`),
-      '',
-      `Subtotal: ₦${subtotal.toLocaleString()}`,
-      discount > 0 ? `Discount: −₦${discount.toLocaleString()}` : null,
-      `Total: ₦${total.toLocaleString()}`,
-      vatAmount > 0 ? `(Includes VAT ${vatRate}%: ₦${vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })})` : null,
-      '',
-      cash > 0 ? `Cash: ₦${cash.toLocaleString()}` : null,
-      card > 0 ? `Card: ₦${card.toLocaleString()}` : null,
-      transfer > 0 ? `Transfer: ₦${transfer.toLocaleString()}` : null,
-      storeSettings?.footer_message ? `\n${storeSettings.footer_message}` : null,
-    ]
-    return lines.filter((l) => l !== null).join('\n')
+  const receiptRef = useRef<HTMLDivElement>(null)
+  const [sharing, setSharing] = useState(false)
+  const [shareNote, setShareNote] = useState('')
+
+  // Renders the receipt itself to a PNG. WhatsApp's wa.me link can only carry
+  // text, so sending a real receipt means handing a file to the OS share sheet
+  // (where WhatsApp appears) rather than building a URL.
+  async function buildReceiptImage() {
+    if (!receiptRef.current) return null
+    const dataUrl = await toPng(receiptRef.current, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      filter: (node) => !(node instanceof HTMLElement && node.dataset.receiptActions !== undefined),
+    })
+    const blob = await (await fetch(dataUrl)).blob()
+    return { dataUrl, blob }
   }
 
-  function shareToWhatsApp() {
-    window.open(`https://wa.me/?text=${encodeURIComponent(buildShareText())}`, '_blank')
+  function downloadImage(dataUrl: string) {
+    const link = document.createElement('a')
+    link.href = dataUrl
+    link.download = `receipt-${saleNumber}.png`
+    link.click()
+  }
+
+  async function shareReceipt() {
+    if (sharing) return
+    setSharing(true)
+    setShareNote('')
+
+    try {
+      const built = await buildReceiptImage()
+      if (!built) return
+
+      const file = new File([built.blob], `receipt-${saleNumber}.png`, { type: 'image/png' })
+
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${storeSettings?.store_name || 'Receipt'} · ${saleNumber}`,
+          })
+          return
+        } catch (err) {
+          // The viewer dismissed the share sheet — that's a choice, not a failure.
+          if (err instanceof Error && err.name === 'AbortError') return
+          // Anything else (e.g. Safari refusing a share outside a fresh gesture)
+          // falls through to saving the image instead.
+        }
+      }
+
+      downloadImage(built.dataUrl)
+      setShareNote('Receipt saved as an image — attach it in WhatsApp.')
+    } catch {
+      setShareNote("Couldn't create the receipt image. Try Print instead.")
+    } finally {
+      setSharing(false)
+    }
   }
 
   return (
     <div className="mx-auto max-w-md print:max-w-none">
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 font-mono print:rounded-none print:border-0 print:p-2 print:shadow-none">
+      <div
+        ref={receiptRef}
+        className="rounded-xl border border-neutral-200 bg-white p-6 font-mono print:rounded-none print:border-0 print:p-2 print:shadow-none"
+      >
         {voided && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
             VOIDED
@@ -150,28 +189,32 @@ export default function Receipt({
           </div>
         )}
 
-        <div className="mt-6 flex gap-2 print:hidden">
-          <button
-            onClick={() => window.print()}
-            className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
-          >
-            Print
-          </button>
-          <button
-            onClick={shareToWhatsApp}
-            aria-label="Share receipt via WhatsApp"
-            className="flex items-center justify-center rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
-          >
-            <Share2 size={18} />
-          </button>
-          {onNewSale && (
+        <div data-receipt-actions className="mt-6 print:hidden">
+          {shareNote && <p className="mb-2 text-center text-xs text-neutral-500">{shareNote}</p>}
+          <div className="flex gap-2">
             <button
-              onClick={onNewSale}
-              className="flex-1 rounded-lg bg-emerald-500 px-4 py-3 font-medium text-white transition hover:bg-emerald-600"
+              onClick={() => window.print()}
+              className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
             >
-              New Sale
+              Print
             </button>
-          )}
+            <button
+              onClick={shareReceipt}
+              disabled={sharing}
+              aria-label="Share receipt as an image"
+              className="flex items-center justify-center rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60"
+            >
+              <Share2 size={18} />
+            </button>
+            {onNewSale && (
+              <button
+                onClick={onNewSale}
+                className="flex-1 rounded-lg bg-emerald-500 px-4 py-3 font-medium text-white transition hover:bg-emerald-600"
+              >
+                New Sale
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

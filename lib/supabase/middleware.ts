@@ -11,6 +11,7 @@ const ADMIN_ONLY_PREFIXES = [
   '/dashboard/sales',
   '/dashboard/shift/history',
   '/dashboard/reports',
+  '/dashboard/vat',
   '/dashboard/users',
   '/dashboard/settings',
 ]

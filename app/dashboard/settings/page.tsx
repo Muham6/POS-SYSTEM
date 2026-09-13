@@ -23,6 +23,7 @@ export default function SettingsPage() {
     return_policy: '',
     logo_url: '',
     vat_rate: '',
+    max_cashier_discount_percent: '',
   })
 
   useEffect(() => {
@@ -41,6 +42,12 @@ export default function SettingsPage() {
             return_policy: data.return_policy || '',
             logo_url: data.logo_url || '',
             vat_rate: data.vat_rate !== null && data.vat_rate !== undefined ? String(data.vat_rate) : '',
+            // Same null-vs-zero care as vat_rate: 0 means "cashiers can give no
+            // discount at all", which is very different from no limit (null).
+            max_cashier_discount_percent:
+              data.max_cashier_discount_percent !== null && data.max_cashier_discount_percent !== undefined
+                ? String(data.max_cashier_discount_percent)
+                : '',
           })
         }
         setLoading(false)
@@ -95,6 +102,11 @@ export default function SettingsPage() {
       .update({
         ...form,
         vat_rate: form.vat_rate ? parseFloat(form.vat_rate) : null,
+        // '0' is a non-empty string, so a 0% cap saves as 0 and only a blank field
+        // saves as null ("no limit").
+        max_cashier_discount_percent: form.max_cashier_discount_percent
+          ? parseFloat(form.max_cashier_discount_percent)
+          : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', 1)
@@ -227,6 +239,27 @@ export default function SettingsPage() {
             <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
               Your prices already include VAT — this only adds an informational breakdown line to receipts. It
               doesn&apos;t change what customers pay. Leave blank to hide it entirely.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              Maximum discount a cashier can give without approval (%)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              value={form.max_cashier_discount_percent}
+              onChange={(e) => setForm({ ...form, max_cashier_discount_percent: e.target.value })}
+              placeholder="e.g. 5"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+            />
+            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+              Measured against the sale&apos;s subtotal. A cashier who goes above this can still complete the sale,
+              but only after a manager signs in on the Sell screen to approve that one discount. Managers are never
+              capped. Leave blank for no limit; enter 0 to stop cashiers giving any discount at all.
             </p>
           </div>
 

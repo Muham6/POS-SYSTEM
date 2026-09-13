@@ -13,8 +13,9 @@ import {
   removeHeldSale,
   type HeldSale,
 } from '@/lib/held-sales'
-import { PauseCircle, X, Package, Camera } from 'lucide-react'
+import { PauseCircle, X, Package, Camera, ShieldCheck } from 'lucide-react'
 import BarcodeScanner from '@/components/barcode-scanner'
+import ManagerOverride from '@/components/manager-override'
 import { useToast } from '@/components/toast-provider'
 
 type Product = {
@@ -62,6 +63,14 @@ type StoreSettings = {
   footer_message: string | null
   return_policy: string | null
   vat_rate: number | null
+  // null = no cap (cashiers may discount freely); 0 = no discount allowed at all.
+  max_cashier_discount_percent: number | null
+}
+
+// A manager's sign-off on one over-limit discount, for the sale in progress only.
+type DiscountApproval = {
+  managerName: string
+  amount: number
 }
 
 export default function SellPage() {
@@ -111,14 +120,38 @@ export default function SellPage() {
   const [scanNotFoundCode, setScanNotFoundCode] = useState<string | null>(null)
   const { showToast } = useToast()
 
+  // The discount cap applies to cashiers only, so the Sell screen needs this
+  // user's role. Both start out restrictive and open up once loaded.
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [discountApproval, setDiscountApproval] = useState<DiscountApproval | null>(null)
+  const [overrideOpen, setOverrideOpen] = useState(false)
+
   useEffect(() => {
     loadProducts()
     loadCustomers()
+    loadRole()
     hydrateFromStorage()
     supabase.from('store_settings').select('*').eq('id', 1).single().then(({ data }) => setStoreSettings(data))
     searchRef.current?.focus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Only an admin is exempt from the discount cap. Anything else — a cashier, or a
+  // profile lookup that fails — is treated as capped, so a failed read can never
+  // hand someone an uncapped discount.
+  async function loadRole() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+
+    const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    setIsAdmin(data?.role === 'admin')
+  }
 
   // Restore whatever was mid-sale before a refresh or navigating away — a
   // cashier interrupted mid-checkout shouldn't lose the cart they built.
@@ -312,6 +345,26 @@ export default function SellPage() {
   const discountValue = parseFloat(discount) || 0
   const total = Math.max(subtotal - discountValue, 0)
 
+  // ---- Discount cap ----
+  // A blank setting means no cap; 0 is a real cap meaning "no discount at all",
+  // so null and 0 must stay distinguishable here.
+  const maxDiscountPercent =
+    storeSettings?.max_cashier_discount_percent !== null &&
+    storeSettings?.max_cashier_discount_percent !== undefined
+      ? Number(storeSettings.max_cashier_discount_percent)
+      : null
+
+  const capApplies = !isAdmin && maxDiscountPercent !== null
+  const maxDiscountAmount = capApplies ? (subtotal * (maxDiscountPercent as number)) / 100 : 0
+  const discountPercentOfSubtotal = subtotal > 0 ? (discountValue / subtotal) * 100 : 0
+  // Half-a-kobo tolerance so floating-point maths can't reject a discount that is
+  // exactly on the limit.
+  const overCap = capApplies && discountValue > 0 && discountValue - maxDiscountAmount > 0.005
+  // An approval covers the amount the manager actually saw. Raising the discount
+  // afterwards voids it and needs a fresh approval.
+  const approvalCoversDiscount = discountApproval !== null && discountValue <= discountApproval.amount + 0.005
+  const discountBlocked = overCap && !approvalCoversDiscount
+
   const cash = parseFloat(cashAmount) || 0
   const card = parseFloat(cardAmount) || 0
   const transfer = parseFloat(transferAmount) || 0
@@ -372,6 +425,10 @@ export default function SellPage() {
     setCart([])
     setMobileCartOpen(false)
     setDiscount('')
+    // The approval was for THIS sale only — it must never carry over to the next
+    // customer, a held sale, or a resumed draft.
+    setDiscountApproval(null)
+    setOverrideOpen(false)
     setCashAmount('')
     setCardAmount('')
     setTransferAmount('')
@@ -451,6 +508,15 @@ export default function SellPage() {
     if (loading) return
     if (cart.length === 0) return
     setError('')
+
+    // Belt-and-braces: the button is already disabled in this state, but never let
+    // an over-limit discount through without a manager's sign-off.
+    if (discountBlocked) {
+      setError(
+        `This discount needs a manager's approval — cashiers can give up to ${maxDiscountPercent}% (₦${maxDiscountAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}) on this sale.`
+      )
+      return
+    }
 
     if (remaining !== 0) {
       setError(
@@ -867,6 +933,49 @@ export default function SellPage() {
               className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
               placeholder="0"
             />
+
+            {capApplies && !overCap && (
+              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                {maxDiscountPercent === 0
+                  ? 'Discounts need a manager’s approval.'
+                  : `Up to ${maxDiscountPercent}% without approval — ₦${maxDiscountAmount.toLocaleString(undefined, {
+                      maximumFractionDigits: 2,
+                    })} on this cart.`}
+              </p>
+            )}
+
+            {discountBlocked && (
+              <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 dark:border-red-900 dark:bg-red-950/40">
+                <p className="text-sm text-red-600 dark:text-red-300">
+                  ₦{discountValue.toLocaleString()} is {discountPercentOfSubtotal.toFixed(1)}% of the ₦
+                  {subtotal.toLocaleString()} subtotal. Cashiers can give up to {maxDiscountPercent}% (₦
+                  {maxDiscountAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}) on this sale, so it
+                  can&apos;t be completed as it stands.
+                  {discountApproval && (
+                    <> The approval from {discountApproval.managerName} only covered ₦
+                    {discountApproval.amount.toLocaleString()}.</>
+                  )}{' '}
+                  Lower the discount, or get a manager to approve this one.
+                </p>
+                <button
+                  onClick={() => setOverrideOpen(true)}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-600"
+                >
+                  <ShieldCheck size={14} />
+                  Get manager approval
+                </button>
+              </div>
+            )}
+
+            {overCap && approvalCoversDiscount && discountApproval && (
+              <p className="mt-2 flex items-start gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <ShieldCheck size={14} className="mt-0.5 shrink-0" />
+                <span>
+                  Approved by {discountApproval.managerName} — up to ₦
+                  {discountApproval.amount.toLocaleString()} on this sale only.
+                </span>
+              </p>
+            )}
           </div>
 
           {/* Split payment */}
@@ -942,7 +1051,7 @@ export default function SellPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0 || loading || remaining !== 0}
+            disabled={cart.length === 0 || loading || remaining !== 0 || discountBlocked}
             className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-3 font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
           >
             {loading ? 'Processing…' : `Complete Sale · ₦${total.toLocaleString()}`}
@@ -959,6 +1068,23 @@ export default function SellPage() {
           <span>{cart.length} item{cart.length === 1 ? '' : 's'} in cart</span>
           <span>₦{total.toLocaleString()} · View Cart</span>
         </button>
+      )}
+
+      {overrideOpen && (
+        <ManagerOverride
+          subtotal={subtotal}
+          discountAmount={discountValue}
+          limitPercent={maxDiscountPercent ?? 0}
+          onClose={() => setOverrideOpen(false)}
+          onApproved={(managerName) => {
+            // Recorded against the exact amount the manager saw, and cleared by
+            // resetCartState() the moment this sale ends.
+            setDiscountApproval({ managerName, amount: discountValue })
+            setOverrideOpen(false)
+            setError('')
+            showToast(`Discount approved by ${managerName}`)
+          }}
+        />
       )}
 
       {scannerOpen && (

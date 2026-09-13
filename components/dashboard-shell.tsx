@@ -20,6 +20,7 @@ import {
   Settings as SettingsIcon,
   Truck,
   Clock,
+  Percent,
   Menu,
   X,
   HelpCircle,
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ElementType> = {
   '/dashboard/shift/history': Clock,
   '/dashboard/sales': ReceiptIcon,
   '/dashboard/reports': BarChart3,
+  '/dashboard/vat': Percent,
   '/dashboard/users': Users,
   '/dashboard/settings': SettingsIcon,
 }

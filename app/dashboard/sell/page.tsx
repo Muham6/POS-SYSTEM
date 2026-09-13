@@ -13,9 +13,8 @@ import {
   removeHeldSale,
   type HeldSale,
 } from '@/lib/held-sales'
-import { PauseCircle, X, Package, Camera, ShieldCheck } from 'lucide-react'
+import { PauseCircle, X, Package, Camera } from 'lucide-react'
 import BarcodeScanner from '@/components/barcode-scanner'
-import ManagerOverride from '@/components/manager-override'
 import { useToast } from '@/components/toast-provider'
 
 type Product = {
@@ -63,14 +62,8 @@ type StoreSettings = {
   footer_message: string | null
   return_policy: string | null
   vat_rate: number | null
-  // null = no cap (cashiers may discount freely); 0 = no discount allowed at all.
-  max_cashier_discount_percent: number | null
-}
-
-// A manager's sign-off on one over-limit discount, for the sale in progress only.
-type DiscountApproval = {
-  managerName: string
-  amount: number
+  // Discounts above this share of the subtotal notify the owner. null = never notify.
+  discount_alert_percent: number | null
 }
 
 export default function SellPage() {
@@ -123,8 +116,6 @@ export default function SellPage() {
   // The discount cap applies to cashiers only, so the Sell screen needs this
   // user's role. Both start out restrictive and open up once loaded.
   const [isAdmin, setIsAdmin] = useState(false)
-  const [discountApproval, setDiscountApproval] = useState<DiscountApproval | null>(null)
-  const [overrideOpen, setOverrideOpen] = useState(false)
 
   useEffect(() => {
     loadProducts()
@@ -345,25 +336,23 @@ export default function SellPage() {
   const discountValue = parseFloat(discount) || 0
   const total = Math.max(subtotal - discountValue, 0)
 
-  // ---- Discount cap ----
-  // A blank setting means no cap; 0 is a real cap meaning "no discount at all",
-  // so null and 0 must stay distinguishable here.
-  const maxDiscountPercent =
-    storeSettings?.max_cashier_discount_percent !== null &&
-    storeSettings?.max_cashier_discount_percent !== undefined
-      ? Number(storeSettings.max_cashier_discount_percent)
+  // ---- Discount reporting ----
+  // Nothing is blocked: a cashier haggling with a customer at the counter can't
+  // wait for the owner to come and type a password. Instead, anything over the
+  // threshold is reported to the owner the moment the sale completes. A blank
+  // setting means never report.
+  const discountAlertPercent =
+    storeSettings?.discount_alert_percent !== null && storeSettings?.discount_alert_percent !== undefined
+      ? Number(storeSettings.discount_alert_percent)
       : null
 
-  const capApplies = !isAdmin && maxDiscountPercent !== null
-  const maxDiscountAmount = capApplies ? (subtotal * (maxDiscountPercent as number)) / 100 : 0
+  const alertApplies = !isAdmin && discountAlertPercent !== null
+  const alertThresholdAmount = alertApplies ? (subtotal * (discountAlertPercent as number)) / 100 : 0
   const discountPercentOfSubtotal = subtotal > 0 ? (discountValue / subtotal) * 100 : 0
-  // Half-a-kobo tolerance so floating-point maths can't reject a discount that is
-  // exactly on the limit.
-  const overCap = capApplies && discountValue > 0 && discountValue - maxDiscountAmount > 0.005
-  // An approval covers the amount the manager actually saw. Raising the discount
-  // afterwards voids it and needs a fresh approval.
-  const approvalCoversDiscount = discountApproval !== null && discountValue <= discountApproval.amount + 0.005
-  const discountBlocked = overCap && !approvalCoversDiscount
+  // Half-a-kobo tolerance so floating-point maths can't trip an alert for a
+  // discount sitting exactly on the threshold.
+  const discountWillBeReported =
+    alertApplies && discountValue > 0 && discountValue - alertThresholdAmount > 0.005
 
   const cash = parseFloat(cashAmount) || 0
   const card = parseFloat(cardAmount) || 0
@@ -427,8 +416,6 @@ export default function SellPage() {
     setDiscount('')
     // The approval was for THIS sale only — it must never carry over to the next
     // customer, a held sale, or a resumed draft.
-    setDiscountApproval(null)
-    setOverrideOpen(false)
     setCashAmount('')
     setCardAmount('')
     setTransferAmount('')
@@ -504,19 +491,30 @@ export default function SellPage() {
     })
   }
 
+  // Tells the owner about a large discount once the sale is done. Deliberately
+  // after the fact: the cashier is never left stuck at the counter waiting for
+  // someone to authorise it, but nothing goes unseen either.
+  function notifyIfLargeDiscount(saleNumber: string) {
+    if (!discountWillBeReported) return
+
+    fetch('/api/notify-discount', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        saleNumber,
+        discount: discountValue,
+        subtotal,
+        percent: Math.round(discountPercentOfSubtotal * 10) / 10,
+      }),
+    }).catch(() => {
+      // Best-effort — a notification failure should never affect the sale itself.
+    })
+  }
+
   async function handleCheckout() {
     if (loading) return
     if (cart.length === 0) return
     setError('')
-
-    // Belt-and-braces: the button is already disabled in this state, but never let
-    // an over-limit discount through without a manager's sign-off.
-    if (discountBlocked) {
-      setError(
-        `This discount needs a manager's approval — cashiers can give up to ${maxDiscountPercent}% (₦${maxDiscountAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}) on this sale.`
-      )
-      return
-    }
 
     if (remaining !== 0) {
       setError(
@@ -573,6 +571,7 @@ export default function SellPage() {
         customer: selectedCustomer,
       })
       notifyIfLowStock(cart)
+      notifyIfLargeDiscount(sale?.sale_number || String(saleId))
       resetCartState()
       loadProducts()
     } catch {
@@ -934,46 +933,21 @@ export default function SellPage() {
               placeholder="0"
             />
 
-            {capApplies && !overCap && (
+            {alertApplies && !discountWillBeReported && (
               <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-                {maxDiscountPercent === 0
-                  ? 'Discounts need a manager’s approval.'
-                  : `Up to ${maxDiscountPercent}% without approval — ₦${maxDiscountAmount.toLocaleString(undefined, {
+                {discountAlertPercent === 0
+                  ? 'Any discount is reported to the owner.'
+                  : `Over ${discountAlertPercent}% (₦${alertThresholdAmount.toLocaleString(undefined, {
                       maximumFractionDigits: 2,
-                    })} on this cart.`}
+                    })} on this cart) is reported to the owner.`}
               </p>
             )}
 
-            {discountBlocked && (
-              <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 dark:border-red-900 dark:bg-red-950/40">
-                <p className="text-sm text-red-600 dark:text-red-300">
-                  ₦{discountValue.toLocaleString()} is {discountPercentOfSubtotal.toFixed(1)}% of the ₦
-                  {subtotal.toLocaleString()} subtotal. Cashiers can give up to {maxDiscountPercent}% (₦
-                  {maxDiscountAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}) on this sale, so it
-                  can&apos;t be completed as it stands.
-                  {discountApproval && (
-                    <> The approval from {discountApproval.managerName} only covered ₦
-                    {discountApproval.amount.toLocaleString()}.</>
-                  )}{' '}
-                  Lower the discount, or get a manager to approve this one.
-                </p>
-                <button
-                  onClick={() => setOverrideOpen(true)}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-600"
-                >
-                  <ShieldCheck size={14} />
-                  Get manager approval
-                </button>
-              </div>
-            )}
-
-            {overCap && approvalCoversDiscount && discountApproval && (
-              <p className="mt-2 flex items-start gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-                <ShieldCheck size={14} className="mt-0.5 shrink-0" />
-                <span>
-                  Approved by {discountApproval.managerName} — up to ₦
-                  {discountApproval.amount.toLocaleString()} on this sale only.
-                </span>
+            {discountWillBeReported && (
+              <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                ₦{discountValue.toLocaleString()} is {discountPercentOfSubtotal.toFixed(1)}% of the ₦
+                {subtotal.toLocaleString()} subtotal. You can still complete this sale — the owner just gets told
+                about it.
               </p>
             )}
           </div>
@@ -1051,7 +1025,7 @@ export default function SellPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0 || loading || remaining !== 0 || discountBlocked}
+            disabled={cart.length === 0 || loading || remaining !== 0}
             className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-3 font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
           >
             {loading ? 'Processing…' : `Complete Sale · ₦${total.toLocaleString()}`}
@@ -1068,23 +1042,6 @@ export default function SellPage() {
           <span>{cart.length} item{cart.length === 1 ? '' : 's'} in cart</span>
           <span>₦{total.toLocaleString()} · View Cart</span>
         </button>
-      )}
-
-      {overrideOpen && (
-        <ManagerOverride
-          subtotal={subtotal}
-          discountAmount={discountValue}
-          limitPercent={maxDiscountPercent ?? 0}
-          onClose={() => setOverrideOpen(false)}
-          onApproved={(managerName) => {
-            // Recorded against the exact amount the manager saw, and cleared by
-            // resetCartState() the moment this sale ends.
-            setDiscountApproval({ managerName, amount: discountValue })
-            setOverrideOpen(false)
-            setError('')
-            showToast(`Discount approved by ${managerName}`)
-          }}
-        />
       )}
 
       {scannerOpen && (

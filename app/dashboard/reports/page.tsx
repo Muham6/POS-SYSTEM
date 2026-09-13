@@ -12,6 +12,7 @@ type PaymentRow = {
   cash_amount: number
   card_amount: number
   transfer_amount: number
+  discount: number
   created_at: string
   cashier_id: string | null
   profiles: { full_name: string } | null
@@ -52,7 +53,7 @@ export default async function ReportsPage() {
 
     supabase
       .from('sales')
-      .select('cash_amount, card_amount, transfer_amount, created_at, cashier_id, profiles ( full_name )')
+      .select('cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles ( full_name )')
       .eq('status', 'completed')
       .gte('created_at', `${weekAgo}T00:00:00`),
 
@@ -100,14 +101,23 @@ export default async function ReportsPage() {
 
   const typedPaymentRows = (paymentRows as unknown as PaymentRow[]) || []
 
-  const cashierTotals: Record<string, { name: string; revenue: number; count: number }> = {}
+  const cashierTotals: Record<
+    string,
+    { name: string; revenue: number; count: number; discount: number; discountedSales: number }
+  > = {}
   typedPaymentRows.forEach((row) => {
     const key = row.cashier_id || 'unknown'
     const name = row.profiles?.full_name || 'Unknown'
-    if (!cashierTotals[key]) cashierTotals[key] = { name, revenue: 0, count: 0 }
+    if (!cashierTotals[key]) cashierTotals[key] = { name, revenue: 0, count: 0, discount: 0, discountedSales: 0 }
     cashierTotals[key].revenue +=
       (Number(row.cash_amount) || 0) + (Number(row.card_amount) || 0) + (Number(row.transfer_amount) || 0)
     cashierTotals[key].count += 1
+
+    const rowDiscount = Number(row.discount) || 0
+    if (rowDiscount > 0) {
+      cashierTotals[key].discount += rowDiscount
+      cashierTotals[key].discountedSales += 1
+    }
   })
   const cashierBreakdown = Object.values(cashierTotals).sort((a, b) => b.revenue - a.revenue)
 
@@ -378,6 +388,12 @@ export default async function ReportsPage() {
             <div key={c.name} className="flex justify-between text-sm">
               <span className="text-neutral-700 dark:text-neutral-300">
                 {c.name} <span className="text-neutral-400 dark:text-neutral-500">· {c.count} sale{c.count === 1 ? '' : 's'}</span>
+                {c.discount > 0 && (
+                  <span className="block text-xs text-amber-600 dark:text-amber-400">
+                    ₦{c.discount.toLocaleString()} discounted across {c.discountedSales} sale
+                    {c.discountedSales === 1 ? '' : 's'}
+                  </span>
+                )}
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">₦{c.revenue.toLocaleString()}</span>
             </div>

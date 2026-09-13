@@ -58,6 +58,21 @@ export async function notifyLowStock(items: LowStockItem[]) {
   await notifyAdmins(JSON.stringify({ title, body, url: '/dashboard/products' }))
 }
 
+type LargeDiscount = {
+  cashierName: string
+  saleNumber: string
+  discount: number
+  subtotal: number
+  percent: number
+}
+
+export async function notifyLargeDiscount(d: LargeDiscount) {
+  const title = `${d.cashierName} gave ₦${d.discount.toLocaleString()} off`
+  const body = `${d.percent}% off a ₦${d.subtotal.toLocaleString()} sale (${d.saleNumber}).`
+
+  await notifyAdmins(JSON.stringify({ title, body, url: '/dashboard/sales' }))
+}
+
 type ShiftCloseSummary = {
   cashierName: string
   expected: number

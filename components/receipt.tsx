@@ -91,6 +91,8 @@ export default function Receipt({
 
       const file = new File([built.blob], `receipt-${saleNumber}.png`, { type: 'image/png' })
 
+      // On a phone this opens the OS share sheet with WhatsApp in it — the path
+      // that actually matters for sending a customer their receipt.
       if (navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
@@ -102,7 +104,19 @@ export default function Receipt({
           // The viewer dismissed the share sheet — that's a choice, not a failure.
           if (err instanceof Error && err.name === 'AbortError') return
           // Anything else (e.g. Safari refusing a share outside a fresh gesture)
-          // falls through to saving the image instead.
+          // falls through to the desktop paths below.
+        }
+      }
+
+      // Desktop browsers can't attach a file to WhatsApp, but WhatsApp Web
+      // accepts a pasted image — so put the receipt on the clipboard.
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': built.blob })])
+          setShareNote('Receipt image copied — paste it into WhatsApp with Ctrl+V.')
+          return
+        } catch {
+          // Clipboard blocked (unfocused document, Firefox, etc) — save it instead.
         }
       }
 

@@ -62,8 +62,6 @@ type StoreSettings = {
   footer_message: string | null
   return_policy: string | null
   vat_rate: number | null
-  // Discounts above this share of the subtotal notify the owner. null = never notify.
-  discount_alert_percent: number | null
 }
 
 export default function SellPage() {
@@ -74,7 +72,6 @@ export default function SellPage() {
   const [unitsByProduct, setUnitsByProduct] = useState<Record<string, Unit[]>>({})
   const [search, setSearch] = useState('')
   const [cart, setCart] = useState<CartItem[]>([])
-  const [discount, setDiscount] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -113,36 +110,14 @@ export default function SellPage() {
   const [scanNotFoundCode, setScanNotFoundCode] = useState<string | null>(null)
   const { showToast } = useToast()
 
-  // The discount cap applies to cashiers only, so the Sell screen needs this
-  // user's role. Both start out restrictive and open up once loaded.
-  const [isAdmin, setIsAdmin] = useState(false)
-
   useEffect(() => {
     loadProducts()
     loadCustomers()
-    loadRole()
     hydrateFromStorage()
     supabase.from('store_settings').select('*').eq('id', 1).single().then(({ data }) => setStoreSettings(data))
     searchRef.current?.focus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Only an admin is exempt from the discount cap. Anything else — a cashier, or a
-  // profile lookup that fails — is treated as capped, so a failed read can never
-  // hand someone an uncapped discount.
-  async function loadRole() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      setIsAdmin(false)
-      return
-    }
-
-    const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    setIsAdmin(data?.role === 'admin')
-  }
 
   // Restore whatever was mid-sale before a refresh or navigating away — a
   // cashier interrupted mid-checkout shouldn't lose the cart they built.
@@ -150,7 +125,6 @@ export default function SellPage() {
     const draft = loadActiveDraft()
     if (draft) {
       setCart(draft.cart)
-      setDiscount(draft.discount)
       setCashAmount(draft.cashAmount)
       setCardAmount(draft.cardAmount)
       setTransferAmount(draft.transferAmount)
@@ -164,13 +138,13 @@ export default function SellPage() {
   useEffect(() => {
     if (!hydrated) return
     const isEmpty =
-      cart.length === 0 && !selectedCustomer && !discount && !cashAmount && !cardAmount && !transferAmount
+      cart.length === 0 && !selectedCustomer && !cashAmount && !cardAmount && !transferAmount
     if (isEmpty) {
       clearActiveDraft()
       return
     }
-    saveActiveDraft({ cart, discount, cashAmount, cardAmount, transferAmount, selectedCustomer })
-  }, [hydrated, cart, discount, cashAmount, cardAmount, transferAmount, selectedCustomer])
+    saveActiveDraft({ cart, cashAmount, cardAmount, transferAmount, selectedCustomer })
+  }, [hydrated, cart, cashAmount, cardAmount, transferAmount, selectedCustomer])
 
   async function loadProducts() {
     const { data: productData } = await supabase
@@ -333,26 +307,7 @@ export default function SellPage() {
   }
 
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const discountValue = parseFloat(discount) || 0
-  const total = Math.max(subtotal - discountValue, 0)
-
-  // ---- Discount reporting ----
-  // Nothing is blocked: a cashier haggling with a customer at the counter can't
-  // wait for the owner to come and type a password. Instead, anything over the
-  // threshold is reported to the owner the moment the sale completes. A blank
-  // setting means never report.
-  const discountAlertPercent =
-    storeSettings?.discount_alert_percent !== null && storeSettings?.discount_alert_percent !== undefined
-      ? Number(storeSettings.discount_alert_percent)
-      : null
-
-  const alertApplies = !isAdmin && discountAlertPercent !== null
-  const alertThresholdAmount = alertApplies ? (subtotal * (discountAlertPercent as number)) / 100 : 0
-  const discountPercentOfSubtotal = subtotal > 0 ? (discountValue / subtotal) * 100 : 0
-  // Half-a-kobo tolerance so floating-point maths can't trip an alert for a
-  // discount sitting exactly on the threshold.
-  const discountWillBeReported =
-    alertApplies && discountValue > 0 && discountValue - alertThresholdAmount > 0.005
+  const total = subtotal
 
   const cash = parseFloat(cashAmount) || 0
   const card = parseFloat(cardAmount) || 0
@@ -397,7 +352,7 @@ export default function SellPage() {
       saleNumber: 'Pending sync',
       items: cart,
       subtotal,
-      discount: discountValue,
+      discount: 0,
       total,
       cash,
       card,
@@ -413,9 +368,6 @@ export default function SellPage() {
   function resetCartState() {
     setCart([])
     setMobileCartOpen(false)
-    setDiscount('')
-    // The approval was for THIS sale only — it must never carry over to the next
-    // customer, a held sale, or a resumed draft.
     setCashAmount('')
     setCardAmount('')
     setTransferAmount('')
@@ -425,7 +377,7 @@ export default function SellPage() {
   }
 
   function currentDraft() {
-    return { cart, discount, cashAmount, cardAmount, transferAmount, selectedCustomer }
+    return { cart, cashAmount, cardAmount, transferAmount, selectedCustomer }
   }
 
   function labelForHeldSale() {
@@ -453,7 +405,6 @@ export default function SellPage() {
 
     removeHeldSale(id)
     setCart(target.cart)
-    setDiscount(target.discount)
     setCashAmount(target.cashAmount)
     setCardAmount(target.cardAmount)
     setTransferAmount(target.transferAmount)
@@ -491,26 +442,6 @@ export default function SellPage() {
     })
   }
 
-  // Tells the owner about a large discount once the sale is done. Deliberately
-  // after the fact: the cashier is never left stuck at the counter waiting for
-  // someone to authorise it, but nothing goes unseen either.
-  function notifyIfLargeDiscount(saleNumber: string) {
-    if (!discountWillBeReported) return
-
-    fetch('/api/notify-discount', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        saleNumber,
-        discount: discountValue,
-        subtotal,
-        percent: Math.round(discountPercentOfSubtotal * 10) / 10,
-      }),
-    }).catch(() => {
-      // Best-effort — a notification failure should never affect the sale itself.
-    })
-  }
-
   async function handleCheckout() {
     if (loading) return
     if (cart.length === 0) return
@@ -532,7 +463,7 @@ export default function SellPage() {
       p_cash_amount: cash,
       p_card_amount: card,
       p_transfer_amount: transfer,
-      p_discount: discountValue,
+      p_discount: 0,
       p_customer_id: selectedCustomer?.id || null,
     }
 
@@ -563,7 +494,7 @@ export default function SellPage() {
         saleNumber: sale?.sale_number || String(saleId),
         items: cart,
         subtotal,
-        discount: discountValue,
+        discount: 0,
         total,
         cash,
         card,
@@ -571,7 +502,6 @@ export default function SellPage() {
         customer: selectedCustomer,
       })
       notifyIfLowStock(cart)
-      notifyIfLargeDiscount(sale?.sale_number || String(saleId))
       resetCartState()
       loadProducts()
     } catch {
@@ -921,37 +851,6 @@ export default function SellPage() {
             )}
           </div>
 
-          <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              Discount (₦, optional)
-            </label>
-            <input
-              type="number"
-              value={discount}
-              onChange={(e) => setDiscount(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
-              placeholder="0"
-            />
-
-            {alertApplies && !discountWillBeReported && (
-              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-                {discountAlertPercent === 0
-                  ? 'Any discount is reported to the owner.'
-                  : `Over ${discountAlertPercent}% (₦${alertThresholdAmount.toLocaleString(undefined, {
-                      maximumFractionDigits: 2,
-                    })} on this cart) is reported to the owner.`}
-              </p>
-            )}
-
-            {discountWillBeReported && (
-              <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-                ₦{discountValue.toLocaleString()} is {discountPercentOfSubtotal.toFixed(1)}% of the ₦
-                {subtotal.toLocaleString()} subtotal. You can still complete this sale — the owner just gets told
-                about it.
-              </p>
-            )}
-          </div>
-
           {/* Split payment */}
           <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
             <div className="flex items-center justify-between">
@@ -999,12 +898,6 @@ export default function SellPage() {
               <span>Subtotal</span>
               <span>₦{subtotal.toLocaleString()}</span>
             </div>
-            {discountValue > 0 && (
-              <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
-                <span>Discount</span>
-                <span>−₦{discountValue.toLocaleString()}</span>
-              </div>
-            )}
             <div className="flex justify-between text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               <span>Total</span>
               <span>₦{total.toLocaleString()}</span>

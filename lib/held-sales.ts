@@ -25,7 +25,6 @@ export type HeldCustomer = {
 
 export type SaleDraft = {
   cart: HeldCartItem[]
-  discount: string
   cashAmount: string
   cardAmount: string
   transferAmount: string

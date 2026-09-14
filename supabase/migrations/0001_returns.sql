@@ -1,21 +1,12 @@
 -- ============================================================================
--- Returns / refunds, plus a discount ceiling for cashiers.
+-- Returns / refunds.
 -- Run this once in Supabase: SQL Editor -> New query -> paste -> Run.
 -- Safe to re-run (everything is IF NOT EXISTS / OR REPLACE).
 -- ============================================================================
 
 
 -- ----------------------------------------------------------------------------
--- 1. Cashier discount ceiling
---    NULL  = no limit (existing behaviour)
---    0     = cashiers may give no discount at all without approval
--- ----------------------------------------------------------------------------
-alter table store_settings
-  add column if not exists max_cashier_discount_percent numeric;
-
-
--- ----------------------------------------------------------------------------
--- 2. Returns
+-- 1. Returns
 --    A sale can be returned more than once (customer brings back one item
 --    today, another next week), so returns are their own records rather than
 --    a flag on the sale.
@@ -55,7 +46,7 @@ create index if not exists return_items_sale_item_idx on return_items(sale_item_
 
 
 -- ----------------------------------------------------------------------------
--- 3. RLS
+-- 2. RLS
 --    Reads are open to signed-in staff. There are deliberately NO insert /
 --    update / delete policies: every write goes through process_return() below,
 --    which is SECURITY DEFINER. That stops a cashier from POSTing a made-up
@@ -74,7 +65,7 @@ create policy "return items are readable by staff"
 
 
 -- ----------------------------------------------------------------------------
--- 4. process_return()
+-- 3. process_return()
 --    Does the whole return atomically: validates, records, restocks, and
 --    flips the sale to 'refunded' once nothing is left to return.
 --

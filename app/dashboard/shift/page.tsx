@@ -14,6 +14,7 @@ export default function ShiftPage() {
   const supabase = createClient()
   const [shift, setShift] = useState<OpenShift | null>(null)
   const [cashSoFar, setCashSoFar] = useState(0)
+  const [cashRefunds, setCashRefunds] = useState(0)
   const [loading, setLoading] = useState(true)
   const [openingFloat, setOpeningFloat] = useState('')
   const [countedCash, setCountedCash] = useState('')
@@ -46,13 +47,19 @@ export default function ShiftPage() {
     setShift(openShift)
 
     if (openShift) {
-      const { data: sales } = await supabase
-        .from('sales')
-        .select('cash_amount')
-        .eq('shift_id', openShift.id)
-        .eq('status', 'completed')
-      const total = (sales || []).reduce((sum, s) => sum + Number(s.cash_amount), 0)
-      setCashSoFar(total)
+      // Must mirror close_shift() exactly, or the screen and Shift History
+      // disagree. Refunded sales stay in — their cash went into the drawer at
+      // the till — and the refund is taken off separately below.
+      const [{ data: sales }, { data: refunds }] = await Promise.all([
+        supabase
+          .from('sales')
+          .select('cash_amount')
+          .eq('shift_id', openShift.id)
+          .in('status', ['completed', 'refunded']),
+        supabase.from('returns').select('refund_cash').eq('shift_id', openShift.id),
+      ])
+      setCashSoFar((sales || []).reduce((sum, s) => sum + Number(s.cash_amount), 0))
+      setCashRefunds((refunds || []).reduce((sum, r) => sum + Number(r.refund_cash), 0))
     }
 
     setLoading(false)
@@ -92,7 +99,7 @@ export default function ShiftPage() {
       setError(error.message)
       return
     }
-    const expected = shift.opening_float + cashSoFar
+    const expected = shift.opening_float + cashSoFar - cashRefunds
     const variance = counted - expected
     setResult({ expected, counted, variance })
     setShift(null)
@@ -197,9 +204,15 @@ export default function ShiftPage() {
           <span>Cash sales so far</span>
           <span>₦{cashSoFar.toLocaleString()}</span>
         </div>
+        {cashRefunds > 0 && (
+          <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
+            <span>Cash refunds given</span>
+            <span>−₦{cashRefunds.toLocaleString()}</span>
+          </div>
+        )}
         <div className="flex justify-between border-t border-neutral-100 pt-2 font-semibold text-neutral-900 dark:border-neutral-800 dark:text-neutral-100">
           <span>Expected in drawer</span>
-          <span>₦{(shift.opening_float + cashSoFar).toLocaleString()}</span>
+          <span>₦{(shift.opening_float + cashSoFar - cashRefunds).toLocaleString()}</span>
         </div>
       </div>
 

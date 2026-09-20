@@ -7,6 +7,9 @@ import { useToast } from '@/components/toast-provider'
 import PushNotifications from '@/components/push-notifications'
 import { Upload } from 'lucide-react'
 
+// Nigeria's standard rate — what the toggle fills in, not a fixed value.
+const DEFAULT_VAT_RATE = '7.5'
+
 export default function SettingsPage() {
   const supabase = createClient()
   const { showToast } = useToast()
@@ -24,6 +27,10 @@ export default function SettingsPage() {
     logo_url: '',
     vat_rate: '',
   })
+
+  // No separate "VAT on" column: an empty rate already means no VAT everywhere
+  // else (receipt, VAT report), so the switch just reflects that.
+  const vatEnabled = form.vat_rate !== ''
 
   useEffect(() => {
     supabase
@@ -211,23 +218,49 @@ export default function SettingsPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              VAT rate (%, optional)
+          <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={vatEnabled}
+                onChange={(e) =>
+                  setForm({ ...form, vat_rate: e.target.checked ? DEFAULT_VAT_RATE : '' })
+                }
+                className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500"
+              />
+              <span>
+                <span className="block text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  Charge VAT
+                </span>
+                <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
+                  Turn this off if your shop doesn&apos;t charge VAT — the line disappears from receipts and the
+                  VAT Report goes quiet.
+                </span>
+              </span>
             </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.vat_rate}
-              onChange={(e) => setForm({ ...form, vat_rate: e.target.value })}
-              placeholder="e.g. 7.5"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
-            />
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-              Your prices already include VAT — this only adds an informational breakdown line to receipts. It
-              doesn&apos;t change what customers pay. Leave blank to hide it entirely.
-            </p>
+
+            {vatEnabled && (
+              <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                <label className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  VAT rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={form.vat_rate}
+                  onChange={(e) => setForm({ ...form, vat_rate: e.target.value })}
+                  placeholder={DEFAULT_VAT_RATE}
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+                />
+                <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                  {DEFAULT_VAT_RATE}% is the standard Nigerian rate — change it only if yours differs. Your prices
+                  already include VAT, so this adds a breakdown line to receipts rather than charging customers
+                  extra.
+                </p>
+              </div>
+            )}
           </div>
 
           <button

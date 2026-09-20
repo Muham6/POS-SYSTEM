@@ -49,11 +49,13 @@ export default function Receipt({
   voided?: boolean
   onNewSale?: () => void
 }) {
-  // VAT-inclusive pricing: prices already include VAT, so this is just an
-  // informational breakdown backed out of the total — it never changes what's
-  // charged, so it needs no changes to how a sale's total is computed or validated.
-  const vatRate = storeSettings?.vat_rate || 0
-  const vatAmount = vatRate > 0 ? total - total / (1 + vatRate / 100) : 0
+  // VAT is added on top of the goods, so it's simply whatever the total carries
+  // above the discounted subtotal. Derived rather than passed in, which keeps
+  // old receipts honest: sales made before VAT was charged have total == net,
+  // so they correctly show no VAT line instead of one invented at today's rate.
+  const net = subtotal - discount
+  const vatAmount = Math.max(total - net, 0)
+  const vatRate = net > 0 && vatAmount > 0 ? Math.round((vatAmount / net) * 1000) / 10 : 0
 
   const receiptRef = useRef<HTMLDivElement>(null)
   const [sharing, setSharing] = useState(false)
@@ -174,16 +176,16 @@ export default function Receipt({
               <span>−₦{discount.toLocaleString()}</span>
             </div>
           )}
-          <div className="flex justify-between text-base font-bold text-neutral-900">
-            <span>TOTAL</span>
-            <span>₦{total.toLocaleString()}</span>
-          </div>
           {vatAmount > 0 && (
-            <div className="flex justify-between text-xs text-neutral-400">
-              <span>Includes VAT ({vatRate}%)</span>
+            <div className="flex justify-between text-neutral-600">
+              <span>VAT ({vatRate}%)</span>
               <span>₦{vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
             </div>
           )}
+          <div className="flex justify-between text-base font-bold text-neutral-900">
+            <span>TOTAL</span>
+            <span>₦{total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+          </div>
         </div>
 
         <div className="mt-2 space-y-1 text-right text-xs text-neutral-400">

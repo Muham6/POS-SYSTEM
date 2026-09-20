@@ -31,7 +31,7 @@ export default async function VatReportPage({
     ? await fetchCompletedSalesForMonth(supabase, month)
     : { rows: [], error: null }
 
-  const { days, totals } = buildVatBreakdown(rows, vatRate)
+  const { days, totals } = buildVatBreakdown(rows)
 
   const months = monthOptions()
   const monthChoices = months.includes(month) ? months : [month, ...months]
@@ -137,27 +137,24 @@ export default async function VatReportPage({
             </p>
           </form>
 
-          {/* Honest caveat — the rate is not stored per sale */}
+          {/* Honest caveat — sales predating VAT genuinely carry none */}
           <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
               Please read before filing
             </h2>
 
             <p className="mt-2 text-sm text-amber-800 dark:text-amber-200">
-              Past sales don&apos;t record the VAT rate that was in force on the
-              day they were rung up. Every figure on this page is therefore
-              worked out at your VAT rate as it stands today,{' '}
-              <span className="font-semibold">{vatRate}%</span>. If the rate was
-              different at any point during {label}, the numbers here will be
-              wrong for those days and need checking by hand before you send
-              anything to FIRS.
+              Each sale records the VAT actually charged on it, so these figures
+              are exact and a later change to your rate can&apos;t alter a month
+              you have already filed.
             </p>
 
             <p className="mt-2 text-sm text-amber-800 dark:text-amber-200">
-              Your prices already include VAT, so the VAT shown is the portion
-              sitting inside each sale total — the same figure printed on the
-              customer&apos;s receipt, not an extra charge added on top.
-              Refunded and cancelled sales are left out.
+              Sales rung up before you switched VAT on show{' '}
+              <span className="font-semibold">zero VAT</span>, because none was
+              ever added to them. That is deliberate — claiming VAT on a sale
+              where the customer was never charged it would overstate what you
+              owe. Refunded and cancelled sales are left out.
             </p>
           </div>
 

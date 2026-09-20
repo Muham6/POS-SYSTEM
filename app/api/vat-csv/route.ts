@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const { days, totals } = buildVatBreakdown(rows, vatRate)
+  const { days, totals } = buildVatBreakdown(rows)
 
   const header = [
     'Date',

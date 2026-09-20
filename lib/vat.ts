@@ -5,6 +5,8 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 export type VatSaleRow = {
   created_at: string
   total: number | string | null
+  // Recorded at the moment of sale. NULL on sales rung up before VAT was charged.
+  vat_amount?: number | string | null
 }
 
 export type VatDayRow = {
@@ -22,13 +24,17 @@ export type VatTotals = {
   vat: number
 }
 
-// Pricing in this shop is VAT-INCLUSIVE: the price on the shelf already contains
-// the VAT, so VAT is backed OUT of the total rather than added on top. This is the
-// same formula components/receipt.tsx prints on every receipt — keep the two in
-// step or the monthly return stops reconciling with the paper the customer holds.
-export function vatFromInclusiveTotal(total: number, vatRate: number): number {
-  if (!(vatRate > 0)) return 0
-  return total - total / (1 + vatRate / 100)
+// VAT is charged ON TOP of the shelf price and stored on the sale, so a filing
+// uses the exact figure the customer was charged rather than one re-derived at
+// whatever the rate happens to be today.
+//
+// Sales predating that carry no vat_amount. Those are reported as zero VAT,
+// because no VAT was ever added to them — inventing some retrospectively would
+// overstate what the shop owes.
+export function vatForSale(row: VatSaleRow): number {
+  const recorded = row.vat_amount
+  if (recorded === null || recorded === undefined) return 0
+  return Number(recorded) || 0
 }
 
 export function isValidMonth(value: string): boolean {
@@ -110,7 +116,7 @@ export async function fetchCompletedSalesForMonth(
   for (let page = 0; page < 200; page++) {
     const { data, error } = await supabase
       .from('sales')
-      .select('created_at, total')
+      .select('created_at, total, vat_amount')
       // Only completed sales are VAT owed — refunded and cancelled sales are not.
       .eq('status', 'completed')
       .gte('created_at', from)
@@ -129,16 +135,13 @@ export async function fetchCompletedSalesForMonth(
   return { rows, error: null }
 }
 
-export function buildVatBreakdown(
-  rows: VatSaleRow[],
-  vatRate: number
-): { days: VatDayRow[]; totals: VatTotals } {
+export function buildVatBreakdown(rows: VatSaleRow[]): { days: VatDayRow[]; totals: VatTotals } {
   const byDay = new Map<string, VatDayRow>()
 
   rows.forEach((row) => {
     const day = String(row.created_at).slice(0, 10)
     const gross = Number(row.total) || 0
-    const vat = vatFromInclusiveTotal(gross, vatRate)
+    const vat = vatForSale(row)
 
     let entry = byDay.get(day)
 

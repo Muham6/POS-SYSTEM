@@ -285,8 +285,8 @@ export default function SettingsPage() {
             ]}
             subtotal={2200}
             discount={0}
-            total={2200}
-            cash={2200}
+            total={2200 + (form.vat_rate ? Math.round(2200 * parseFloat(form.vat_rate)) / 100 : 0)}
+            cash={2200 + (form.vat_rate ? Math.round(2200 * parseFloat(form.vat_rate)) / 100 : 0)}
             card={0}
             transfer={0}
             storeSettings={{

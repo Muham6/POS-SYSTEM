@@ -307,7 +307,12 @@ export default function SellPage() {
   }
 
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const total = subtotal
+
+  // VAT is charged on top of the goods, matching process_sale. Rounded the same
+  // way the database rounds it, so the payment check can't be a kobo out.
+  const vatRate = storeSettings?.vat_rate || 0
+  const vatAmount = vatRate > 0 ? Math.round(subtotal * vatRate) / 100 : 0
+  const total = subtotal + vatAmount
 
   const cash = parseFloat(cashAmount) || 0
   const card = parseFloat(cardAmount) || 0
@@ -898,9 +903,15 @@ export default function SellPage() {
               <span>Subtotal</span>
               <span>₦{subtotal.toLocaleString()}</span>
             </div>
+            {vatAmount > 0 && (
+              <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
+                <span>VAT ({vatRate}%)</span>
+                <span>+₦{vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               <span>Total</span>
-              <span>₦{total.toLocaleString()}</span>
+              <span>₦{total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
             </div>
             <div
               className={`flex justify-between text-sm font-medium ${

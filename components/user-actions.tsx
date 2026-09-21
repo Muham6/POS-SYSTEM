@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/toast-provider'
 import { KeyRound, UserX, UserCheck } from 'lucide-react'
 
@@ -16,7 +15,6 @@ export default function UserActions({
   isSelf: boolean
 }) {
   const router = useRouter()
-  const supabase = createClient()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showReset, setShowReset] = useState(false)
@@ -30,13 +28,20 @@ export default function UserActions({
     if (!confirm(isActive ? 'Deactivate this account?' : 'Reactivate this account?')) return
 
     setLoading(true)
-    const { error } = await supabase.from('profiles').update({ is_active: !isActive }).eq('id', userId)
+    // Goes through the server so the login itself is locked, not just the app.
+    const res = await fetch('/api/admin/set-active', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, active: !isActive }),
+    })
+    const data = await res.json().catch(() => ({}))
     setLoading(false)
 
-    if (error) {
-      showToast(error.message, 'error')
+    if (!res.ok) {
+      showToast(data.error || 'Failed to update account', 'error')
       return
     }
+    showToast(isActive ? 'Account deactivated and login locked' : 'Account reactivated')
     router.refresh()
   }
 

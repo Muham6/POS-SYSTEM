@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import SalesTrendChart from '@/components/sales-trend-chart'
+import { money } from '@/lib/money'
 
 type LowStockProduct = {
   id: string
@@ -180,7 +181,7 @@ export default async function ReportsPage() {
             Today
           </p>
           <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            ₦{Number(todayRow?.total_revenue || 0).toLocaleString()}
+            {money(Number(todayRow?.total_revenue || 0))}
           </p>
           <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
             {todayRow?.num_sales || 0} sales
@@ -192,7 +193,7 @@ export default async function ReportsPage() {
             Last 7 days
           </p>
           <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            ₦{weekTotal.toLocaleString()}
+            {money(weekTotal)}
           </p>
           <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
             {weekSales} sales
@@ -219,10 +220,10 @@ export default async function ReportsPage() {
             Profit (7 days)
           </p>
           <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            ₦{weekProfit.toLocaleString()}
+            {money(weekProfit)}
           </p>
           <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-            Today: ₦{Number(todayProfitRow?.profit || 0).toLocaleString()} · approximate
+            Today: {money(Number(todayProfitRow?.profit || 0))} · approximate
           </p>
         </div>
 
@@ -231,7 +232,7 @@ export default async function ReportsPage() {
             Inventory value
           </p>
           <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            ₦{stockValuation.total.toLocaleString()}
+            {money(stockValuation.total)}
           </p>
           <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
             {stockValuation.missingCostCount > 0
@@ -318,7 +319,7 @@ export default async function ReportsPage() {
                 Cash
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                ₦{todayPaymentTotals.cash.toLocaleString()}
+                {money(todayPaymentTotals.cash)}
               </span>
             </div>
 
@@ -327,7 +328,7 @@ export default async function ReportsPage() {
                 Card
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                ₦{todayPaymentTotals.card.toLocaleString()}
+                {money(todayPaymentTotals.card)}
               </span>
             </div>
 
@@ -336,7 +337,7 @@ export default async function ReportsPage() {
                 Transfer
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                ₦{todayPaymentTotals.transfer.toLocaleString()}
+                {money(todayPaymentTotals.transfer)}
               </span>
             </div>
           </div>
@@ -353,7 +354,7 @@ export default async function ReportsPage() {
                 Cash
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                ₦{paymentTotals.cash.toLocaleString()}
+                {money(paymentTotals.cash)}
               </span>
             </div>
 
@@ -362,7 +363,7 @@ export default async function ReportsPage() {
                 Card
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                ₦{paymentTotals.card.toLocaleString()}
+                {money(paymentTotals.card)}
               </span>
             </div>
 
@@ -371,7 +372,7 @@ export default async function ReportsPage() {
                 Transfer
               </span>
               <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                ₦{paymentTotals.transfer.toLocaleString()}
+                {money(paymentTotals.transfer)}
               </span>
             </div>
           </div>
@@ -390,12 +391,12 @@ export default async function ReportsPage() {
                 {c.name} <span className="text-neutral-400 dark:text-neutral-500">· {c.count} sale{c.count === 1 ? '' : 's'}</span>
                 {c.discount > 0 && (
                   <span className="block text-xs text-amber-600 dark:text-amber-400">
-                    ₦{c.discount.toLocaleString()} discounted across {c.discountedSales} sale
+                    {money(c.discount)} discounted across {c.discountedSales} sale
                     {c.discountedSales === 1 ? '' : 's'}
                   </span>
                 )}
               </span>
-              <span className="font-medium text-neutral-900 dark:text-neutral-100">₦{c.revenue.toLocaleString()}</span>
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">{money(c.revenue)}</span>
             </div>
           ))}
 

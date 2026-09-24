@@ -3,6 +3,7 @@ import { getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import SalesTrendChart from '@/components/sales-trend-chart'
 import { ShoppingCart, TrendingUp, AlertTriangle, Wallet } from 'lucide-react'
+import { money } from '@/lib/money'
 
 export default async function DashboardOverview() {
   const profile = await getProfile()
@@ -62,7 +63,7 @@ export default async function DashboardOverview() {
                 <p className="text-xs uppercase tracking-wider">Today</p>
               </div>
               <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100 sm:text-2xl">
-                ₦{todayTotal.toLocaleString()}
+                {money(todayTotal)}
               </p>
               <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{todayCount} sale{todayCount === 1 ? '' : 's'}</p>
             </div>
@@ -73,7 +74,7 @@ export default async function DashboardOverview() {
                 <p className="text-xs uppercase tracking-wider">Profit today</p>
               </div>
               <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100 sm:text-2xl">
-                ₦{todayProfit.toLocaleString()}
+                {money(todayProfit)}
               </p>
               <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">approximate</p>
             </div>

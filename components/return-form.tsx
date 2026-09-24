@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/toast-provider'
+import { money } from '@/lib/money'
 
 export type ReturnLine = {
   id: string
@@ -142,7 +143,7 @@ export default function ReturnForm({
                 <div className="flex-1">
                   <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{line.product_name}</p>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    ₦{line.unit_price.toLocaleString()} × {line.quantity} {line.unit_name || ''}
+                    {money(line.unit_price)} × {line.quantity} {line.unit_name || ''}
                     {line.alreadyReturned > 0 && (
                       <span className="text-amber-600 dark:text-amber-400">
                         {' '}
@@ -202,17 +203,17 @@ export default function ReturnForm({
         <div className="space-y-1 text-sm">
           <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
             <span>Goods at list price</span>
-            <span>₦{gross.toLocaleString()}</span>
+            <span>{money(gross)}</span>
           </div>
           {discountApplied > 0 && (
             <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
               <span>Less the discount on the original sale</span>
-              <span>−₦{discountApplied.toLocaleString()}</span>
+              <span>−{money(discountApplied)}</span>
             </div>
           )}
           <div className="flex justify-between border-t border-neutral-100 pt-2 text-base font-semibold text-neutral-900 dark:border-neutral-800 dark:text-neutral-100">
             <span>Refund due</span>
-            <span>₦{refundDue.toLocaleString()}</span>
+            <span>{money(refundDue)}</span>
           </div>
         </div>
 
@@ -261,7 +262,7 @@ export default function ReturnForm({
               }`}
             >
               <span>{Math.abs(outstanding) <= 0.01 ? 'Fully allocated' : 'Still to allocate'}</span>
-              <span>₦{Math.abs(outstanding).toLocaleString()}</span>
+              <span>{money(Math.abs(outstanding))}</span>
             </div>
           )}
         </div>

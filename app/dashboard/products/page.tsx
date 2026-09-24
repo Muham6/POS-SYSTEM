@@ -3,6 +3,7 @@ import { Pencil, History, Package } from 'lucide-react'
 import DeleteProductButton from '@/components/delete-product-button'
 import CategoryFilter from '@/components/category-filter'
 import { createClient } from '@/lib/supabase/server'
+import { money } from '@/lib/money'
 
 type Product = {
   id: string
@@ -147,7 +148,7 @@ export default async function ProductsPage({
                     </td>
 
                     <td className="px-4 py-3 text-right text-neutral-900 dark:text-neutral-100">
-                      ₦{Number(p.price).toLocaleString()}
+                      {money(Number(p.price))}
                     </td>
 
                     <td className="px-4 py-3 text-right">

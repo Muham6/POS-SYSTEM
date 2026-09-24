@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { money } from '@/lib/money'
 import { Clock, Wallet, CheckCircle2 } from 'lucide-react'
 
 type OpenShift = {
@@ -128,15 +129,15 @@ export default function ShiftPage() {
         <div className="mt-6 space-y-2 rounded-xl border border-neutral-200 bg-white p-5 text-left text-sm dark:border-neutral-800 dark:bg-neutral-900">
           <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
             <span>Expected cash</span>
-            <span>₦{result.expected.toLocaleString()}</span>
+            <span>{money(result.expected)}</span>
           </div>
           <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
             <span>Counted cash</span>
-            <span>₦{result.counted.toLocaleString()}</span>
+            <span>{money(result.counted)}</span>
           </div>
           <div className={`flex justify-between border-t border-neutral-100 pt-2 font-semibold dark:border-neutral-800 ${balanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
             <span>{balanced ? 'Balanced' : result.variance > 0 ? 'Over' : 'Short'}</span>
-            <span>₦{Math.abs(result.variance).toLocaleString()}</span>
+            <span>{money(Math.abs(result.variance))}</span>
           </div>
         </div>
         <button
@@ -198,21 +199,21 @@ export default function ShiftPage() {
       <div className="mt-4 space-y-2 rounded-xl border border-neutral-200 bg-white p-5 text-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
           <span>Opening float</span>
-          <span>₦{shift.opening_float.toLocaleString()}</span>
+          <span>{money(shift.opening_float)}</span>
         </div>
         <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
           <span>Cash sales so far</span>
-          <span>₦{cashSoFar.toLocaleString()}</span>
+          <span>{money(cashSoFar)}</span>
         </div>
         {cashRefunds > 0 && (
           <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
             <span>Cash refunds given</span>
-            <span>−₦{cashRefunds.toLocaleString()}</span>
+            <span>−{money(cashRefunds)}</span>
           </div>
         )}
         <div className="flex justify-between border-t border-neutral-100 pt-2 font-semibold text-neutral-900 dark:border-neutral-800 dark:text-neutral-100">
           <span>Expected in drawer</span>
-          <span>₦{(shift.opening_float + cashSoFar - cashRefunds).toLocaleString()}</span>
+          <span>{money((shift.opening_float + cashSoFar - cashRefunds))}</span>
         </div>
       </div>
 

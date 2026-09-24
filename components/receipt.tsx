@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { Share2 } from 'lucide-react'
+import { money } from '@/lib/money'
 
 type ReceiptItem = {
   product_name: string
@@ -30,6 +31,7 @@ export default function Receipt({
   cash,
   card,
   transfer,
+  changeDue,
   customerLabel,
   storeSettings,
   voided,
@@ -44,6 +46,8 @@ export default function Receipt({
   cash: number
   card: number
   transfer: number
+  /** Only known at the till — a reprinted sale doesn't record what was tendered. */
+  changeDue?: number
   customerLabel?: string | null
   storeSettings: StoreSettings
   voided?: boolean
@@ -160,7 +164,7 @@ export default function Receipt({
               <span className="text-neutral-700">
                 {i.product_name} × {i.quantity} {i.unit_name || ''}
               </span>
-              <span className="text-neutral-900">₦{(i.price * i.quantity).toLocaleString()}</span>
+              <span className="text-neutral-900">{money((i.price * i.quantity))}</span>
             </div>
           ))}
         </div>
@@ -168,31 +172,38 @@ export default function Receipt({
         <div className="mt-4 space-y-1 border-t border-dashed border-neutral-300 pt-4 text-sm">
           <div className="flex justify-between text-neutral-600">
             <span>Subtotal</span>
-            <span>₦{subtotal.toLocaleString()}</span>
+            <span>{money(subtotal)}</span>
           </div>
           {discount > 0 && (
             <div className="flex justify-between text-neutral-600">
               <span>Discount</span>
-              <span>−₦{discount.toLocaleString()}</span>
+              <span>−{money(discount)}</span>
             </div>
           )}
           {vatAmount > 0 && (
             <div className="flex justify-between text-neutral-600">
               <span>VAT ({vatRate}%)</span>
-              <span>₦{vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              <span>{money(vatAmount)}</span>
             </div>
           )}
           <div className="flex justify-between text-base font-bold text-neutral-900">
             <span>TOTAL</span>
-            <span>₦{total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            <span>{money(total)}</span>
           </div>
         </div>
 
         <div className="mt-2 space-y-1 text-right text-xs text-neutral-400">
-          {cash > 0 && <p>Cash: ₦{cash.toLocaleString()}</p>}
-          {card > 0 && <p>Card: ₦{card.toLocaleString()}</p>}
-          {transfer > 0 && <p>Transfer: ₦{transfer.toLocaleString()}</p>}
+          {cash > 0 && <p>Cash: {money(cash)}</p>}
+          {card > 0 && <p>Card: {money(card)}</p>}
+          {transfer > 0 && <p>Transfer: {money(transfer)}</p>}
         </div>
+
+        {changeDue !== undefined && changeDue > 0 && (
+          <div className="mt-2 flex justify-between border-t border-dashed border-neutral-300 pt-2 text-sm font-bold text-neutral-900">
+            <span>CHANGE</span>
+            <span>{money(changeDue)}</span>
+          </div>
+        )}
 
         {(storeSettings?.footer_message || storeSettings?.return_policy) && (
           <div className="mt-4 border-t border-dashed border-neutral-300 pt-4 text-center">

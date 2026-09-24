@@ -4,6 +4,7 @@ import { getProfile } from '@/lib/auth'
 import Receipt from '@/components/receipt'
 import VoidSaleButton from '@/components/void-sale-button'
 import { Undo2 } from 'lucide-react'
+import { money } from '@/lib/money'
 
 type SaleDetail = {
   id: string
@@ -144,7 +145,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
               Returns
             </h2>
             <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              ₦{refundedSoFar.toLocaleString()} refunded
+              {money(refundedSoFar)} refunded
             </span>
           </div>
 
@@ -153,7 +154,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
               <div key={r.id} className="border-t border-neutral-100 pt-3 text-sm first:border-0 first:pt-0 dark:border-neutral-800">
                 <div className="flex justify-between">
                   <span className="font-medium text-neutral-800 dark:text-neutral-200">{r.return_number}</span>
-                  <span className="text-neutral-900 dark:text-neutral-100">₦{Number(r.total_refund).toLocaleString()}</span>
+                  <span className="text-neutral-900 dark:text-neutral-100">{money(Number(r.total_refund))}</span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   {new Date(r.created_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}

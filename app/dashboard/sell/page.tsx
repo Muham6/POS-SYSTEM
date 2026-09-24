@@ -16,6 +16,7 @@ import {
 import { PauseCircle, X, Package, Camera } from 'lucide-react'
 import BarcodeScanner from '@/components/barcode-scanner'
 import { useToast } from '@/components/toast-provider'
+import { money } from '@/lib/money'
 
 type Product = {
   id: string
@@ -78,6 +79,9 @@ export default function SellPage() {
   const [cashAmount, setCashAmount] = useState('')
   const [cardAmount, setCardAmount] = useState('')
   const [transferAmount, setTransferAmount] = useState('')
+  // What the customer physically handed over. Kept apart from cashAmount,
+  // which is what the sale is settled with — the difference is their change.
+  const [cashGiven, setCashGiven] = useState('')
 
   const [customers, setCustomers] = useState<Customer[]>([])
   const [customerSearch, setCustomerSearch] = useState('')
@@ -97,6 +101,7 @@ export default function SellPage() {
     cash: number
     card: number
     transfer: number
+    changeDue: number
     customer: Customer | null
   } | null>(null)
 
@@ -320,6 +325,19 @@ export default function SellPage() {
   const paidSoFar = cash + card + transfer
   const remaining = Math.round((total - paidSoFar) * 100) / 100
 
+  const cashGivenValue = parseFloat(cashGiven) || 0
+  const changeDue = cashGivenValue > cash ? Math.round((cashGivenValue - cash) * 100) / 100 : 0
+
+  // The cashier types what the customer handed over; the sale is still settled
+  // for exactly what's owed, and the difference is change. Capped at the
+  // outstanding balance so a note bigger than the bill can't overpay the sale.
+  function handleCashGiven(value: string) {
+    setCashGiven(value)
+    const given = parseFloat(value) || 0
+    const owedInCash = Math.max(Math.round((total - card - transfer) * 100) / 100, 0)
+    setCashAmount(given > 0 ? String(Math.min(given, owedInCash)) : '')
+  }
+
   function fillRemainingAsCash() {
     setCashAmount(String(Math.max(total - card - transfer, 0)))
   }
@@ -362,6 +380,7 @@ export default function SellPage() {
       cash,
       card,
       transfer,
+      changeDue,
       customer: selectedCustomer,
     })
     setError('')
@@ -374,6 +393,7 @@ export default function SellPage() {
     setCart([])
     setMobileCartOpen(false)
     setCashAmount('')
+    setCashGiven('')
     setCardAmount('')
     setTransferAmount('')
     setSelectedCustomer(null)
@@ -504,6 +524,7 @@ export default function SellPage() {
         cash,
         card,
         transfer,
+        changeDue,
         customer: selectedCustomer,
       })
       notifyIfLowStock(cart)
@@ -542,6 +563,7 @@ export default function SellPage() {
         cash={receipt.cash}
         card={receipt.card}
         transfer={receipt.transfer}
+        changeDue={receipt.changeDue}
         customerLabel={receipt.customer ? receipt.customer.name || receipt.customer.company_or_store : null}
         storeSettings={storeSettings}
         onNewSale={startNewSale}
@@ -694,7 +716,7 @@ export default function SellPage() {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{item.product_name}</p>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                          ₦{item.price.toLocaleString()} × {item.quantity}
+                          {money(item.price)} × {item.quantity}
                         </p>
                       </div>
                       <button
@@ -896,22 +918,54 @@ export default function SellPage() {
                 />
               </div>
             </div>
+
+            <div className="mt-3">
+              <label
+                htmlFor="cash-given"
+                className="block text-[10px] uppercase text-neutral-400 dark:text-neutral-500"
+              >
+                Cash given by customer
+              </label>
+              <input
+                id="cash-given"
+                type="number"
+                inputMode="decimal"
+                value={cashGiven}
+                onChange={(e) => handleCashGiven(e.target.value)}
+                placeholder={total > 0 ? `e.g. ${Math.ceil(total / 500) * 500}` : '0'}
+                className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+              />
+              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                Optional — type the note they handed you and the change is worked out for you.
+              </p>
+            </div>
+
+            {changeDue > 0 && (
+              <div className="mt-3 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+                <span className="text-sm font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                  Change
+                </span>
+                <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                  {money(changeDue)}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 space-y-1 border-t border-neutral-200 pt-4 text-sm dark:border-neutral-800">
             <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
               <span>Subtotal</span>
-              <span>₦{subtotal.toLocaleString()}</span>
+              <span>{money(subtotal)}</span>
             </div>
             {vatAmount > 0 && (
               <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                 <span>VAT ({vatRate}%)</span>
-                <span>+₦{vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                <span>+{money(vatAmount)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               <span>Total</span>
-              <span>₦{total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              <span>{money(total)}</span>
             </div>
             <div
               className={`flex justify-between text-sm font-medium ${
@@ -919,7 +973,7 @@ export default function SellPage() {
               }`}
             >
               <span>{remaining === 0 ? 'Fully paid' : remaining > 0 ? 'Remaining' : 'Overpaid'}</span>
-              <span>₦{Math.abs(remaining).toLocaleString()}</span>
+              <span>{money(Math.abs(remaining))}</span>
             </div>
           </div>
 
@@ -932,7 +986,7 @@ export default function SellPage() {
             disabled={cart.length === 0 || loading || remaining !== 0}
             className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-3 font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
           >
-            {loading ? 'Processing…' : `Complete Sale · ₦${total.toLocaleString()}`}
+            {loading ? 'Processing…' : `Complete Sale · ${money(total)}`}
           </button>
         </div>
       </div>
@@ -944,7 +998,7 @@ export default function SellPage() {
           className="fixed inset-x-4 bottom-4 z-40 flex items-center justify-between rounded-xl bg-emerald-500 px-5 py-4 font-medium text-white shadow-lg lg:hidden"
         >
           <span>{cart.length} item{cart.length === 1 ? '' : 's'} in cart</span>
-          <span>₦{total.toLocaleString()} · View Cart</span>
+          <span>{money(total)} · View Cart</span>
         </button>
       )}
 

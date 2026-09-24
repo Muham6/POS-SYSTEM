@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Eye, ReceiptText } from 'lucide-react'
+import { money } from '@/lib/money'
 
 type Sale = {
   id: string
@@ -102,7 +103,7 @@ export default async function SalesHistoryPage({
           </Link>
         )}
         <p className="ml-auto text-sm text-neutral-500 dark:text-neutral-400">
-          {sales.length} sale{sales.length === 1 ? '' : 's'} · ₦{totalRevenue.toLocaleString()}
+          {sales.length} sale{sales.length === 1 ? '' : 's'} · {money(totalRevenue)}
         </p>
       </form>
 
@@ -133,7 +134,7 @@ export default async function SalesHistoryPage({
                 </td>
                 <td className="px-4 py-3 capitalize text-neutral-500 dark:text-neutral-400">{s.payment_method}</td>
                 <td className="px-4 py-3 text-right font-medium text-neutral-900 dark:text-neutral-100">
-                  ₦{Number(s.total).toLocaleString()}
+                  {money(Number(s.total))}
                 </td>
                 <td className="px-4 py-3">
                   {s.status === 'voided' && (

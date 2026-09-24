@@ -6,6 +6,7 @@ import JsBarcode from 'jsbarcode'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/toast-provider'
 import { AlertTriangle, Barcode, Package, Printer, Search, Wand2, X } from 'lucide-react'
+import { money } from '@/lib/money'
 
 type Product = {
   id: string
@@ -622,7 +623,7 @@ export default function ProductLabelsPage() {
                           </td>
 
                           <td className="px-4 py-3 text-right text-neutral-900 dark:text-neutral-100">
-                            ₦{Number(p.price).toLocaleString()}
+                            {money(Number(p.price))}
                           </td>
 
                           <td className="px-4 py-3 text-right text-neutral-500 dark:text-neutral-400">
@@ -906,7 +907,7 @@ export default function ProductLabelsPage() {
 
                         {showPrice && (
                           <span className={preset.priceClass}>
-                            ₦{Number(cell.product.price).toLocaleString()}
+                            {money(Number(cell.product.price))}
                           </span>
                         )}
                       </div>

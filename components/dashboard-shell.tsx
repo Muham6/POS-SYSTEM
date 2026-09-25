@@ -122,7 +122,7 @@ export default function DashboardShell({
         )}
 
         <aside
-          className={`print:hidden fixed inset-y-0 left-0 z-50 flex w-60 flex-col justify-between border-r border-neutral-200 bg-white p-5 transition-transform dark:border-neutral-800 dark:bg-neutral-900 lg:static lg:translate-x-0 ${
+          className={`print:hidden fixed inset-y-0 left-0 z-50 flex w-60 flex-col justify-between overflow-y-auto border-r border-neutral-200 bg-white p-5 transition-transform dark:border-neutral-800 dark:bg-neutral-900 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
             sidebarOpen
               ? 'translate-x-0'
               : '-translate-x-full'
@@ -195,7 +195,7 @@ export default function DashboardShell({
         </aside>
 
         <div className="flex flex-1 flex-col pb-16 lg:pb-0">
-          <header className="print:hidden flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
+          <header className="print:hidden sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
             <button
               onClick={() => setMenuOpen(true)}
               className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 lg:hidden"

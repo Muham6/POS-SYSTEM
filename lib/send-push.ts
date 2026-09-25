@@ -1,20 +1,45 @@
 import webpush from 'web-push'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// SERVER-ONLY. VAPID_PRIVATE_KEY must never reach the browser.
-webpush.setVapidDetails(
-  'mailto:support@example.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-)
-
 type LowStockItem = { name: string; stock_quantity: number }
+
+// SERVER-ONLY. VAPID_PRIVATE_KEY must never reach the browser.
+//
+// Configured lazily, and never at module scope. setVapidDetails() throws on a
+// missing or malformed key, and Next evaluates this module while collecting
+// page data for the routes that import it — so doing this at import time meant
+// one absent env var on the host failed the ENTIRE build, not just push.
+// Returns false instead of throwing: a shop that hasn't set up notifications
+// should quietly not get them, not have its sales endpoints return 500.
+let vapidReady: boolean | null = null
+
+function configureVapid(): boolean {
+  if (vapidReady !== null) return vapidReady
+
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY
+
+  if (!publicKey || !privateKey) {
+    vapidReady = false
+    return false
+  }
+
+  try {
+    webpush.setVapidDetails('mailto:support@example.com', publicKey, privateKey)
+    vapidReady = true
+  } catch {
+    // Present but malformed — a truncated paste, say. Same outcome: no push.
+    vapidReady = false
+  }
+
+  return vapidReady
+}
 
 // Shared by every notify* function: sends one payload to every admin
 // device that's opted in, and prunes subscriptions the push service
 // reports as dead (unsubscribed, expired, etc).
 async function notifyAdmins(payload: string) {
-  if (!process.env.VAPID_PRIVATE_KEY || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return
+  if (!configureVapid()) return
 
   const admin = createAdminClient()
 

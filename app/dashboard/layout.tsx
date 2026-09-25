@@ -30,6 +30,7 @@ const adminLinks = [
   { href: '/dashboard/stock-history', label: 'Stock History', live: true },
   { href: '/dashboard/suppliers', label: 'Suppliers', live: true },
   { href: '/dashboard/sales', label: 'Sales History', live: true },
+  { href: '/dashboard/customers', label: 'Customers', live: true },
   { href: '/dashboard/shift/history', label: 'Shift History', live: true },
   { href: '/dashboard/reports', label: 'Reports', live: true },
   { href: '/dashboard/vat', label: 'VAT Report', live: true },

@@ -9,6 +9,7 @@ const ADMIN_ONLY_PREFIXES = [
   '/dashboard/stock-history',
   '/dashboard/suppliers',
   '/dashboard/sales',
+  '/dashboard/customers',
   '/dashboard/shift/history',
   '/dashboard/reports',
   '/dashboard/vat',

@@ -41,10 +41,9 @@ type RawStockMovement = {
     name: string
     sku: string | null
   } | null
-  profiles: {
-    full_name: string | null
-    role: string | null
-  } | null
+  // stock_movements.performed_by has no foreign key, so who did it has to be
+  // looked up separately rather than embedded.
+  performed_by: string | null
 }
 
 const typeStyles: Record<string, string> = {
@@ -98,10 +97,7 @@ export default async function StockHistoryPage({
           name,
           sku
         ),
-        profiles (
-          full_name,
-          role
-        )
+        performed_by
       `
       )
       .eq('product_id', productId)
@@ -136,7 +132,25 @@ export default async function StockHistoryPage({
     if (error) queryError = error.message
     productName = productData?.name
 
-    rows = ((data as unknown as RawStockMovement[]) || []).map((m) => ({
+    const raw = (data as unknown as RawStockMovement[]) || []
+
+    // Second query rather than an embed: performed_by carries no foreign key
+    // for PostgREST to follow.
+    const actorIds = [...new Set(raw.map((m) => m.performed_by).filter((id): id is string => !!id))]
+    const actors = new Map<string, { full_name: string | null; role: string | null }>()
+
+    if (actorIds.length > 0) {
+      const { data: people } = await supabase
+        .from('profiles')
+        .select('id, full_name, role')
+        .in('id', actorIds)
+
+      ;(people || []).forEach((person) =>
+        actors.set(person.id, { full_name: person.full_name, role: person.role })
+      )
+    }
+
+    rows = raw.map((m) => ({
       id: m.id,
       created_at: m.created_at,
       product_name: m.products?.name || '',
@@ -147,8 +161,8 @@ export default async function StockHistoryPage({
       new_stock: m.new_stock,
       note: m.note,
       batch_reference: m.batch_reference,
-      performed_by_name: m.profiles?.full_name || null,
-      performed_by_role: m.profiles?.role || null,
+      performed_by_name: (m.performed_by && actors.get(m.performed_by)?.full_name) || null,
+      performed_by_role: (m.performed_by && actors.get(m.performed_by)?.role) || null,
     }))
   } else {
     let q = supabase

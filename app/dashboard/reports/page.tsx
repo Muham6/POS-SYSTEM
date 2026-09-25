@@ -54,7 +54,11 @@ export default async function ReportsPage() {
 
     supabase
       .from('sales')
-      .select('cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles ( full_name )')
+      // Must name the FK: sales points at profiles twice (cashier_id and
+      // voided_by), so a bare profiles(...) embed is ambiguous and errors.
+      .select(
+        'cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles!sales_cashier_id_fkey ( full_name )'
+      )
       .eq('status', 'completed')
       .gte('created_at', `${weekAgo}T00:00:00`),
 

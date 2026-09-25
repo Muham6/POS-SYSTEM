@@ -40,8 +40,10 @@ export default function HelpAssistant() {
 
   // Draggable button position. Starts null (matches SSR) and is set from
   // localStorage — or the bottom-right corner as a default — after mount.
+  // Where the user dropped it. Never adjusted by viewport changes.
   const [pos, setPos] = useState<Point | null>(null)
   const posRef = useRef<Point | null>(null)
+  const [viewport, setViewport] = useState<{ w: number; h: number } | null>(null)
   const dragRef = useRef<{ startX: number; startY: number; originX: number; originY: number; moved: boolean } | null>(
     null
   )
@@ -61,18 +63,16 @@ export default function HelpAssistant() {
       }
       posRef.current = initial
       setPos(initial)
+      setViewport({ w: window.innerWidth, h: window.innerHeight })
     })
 
+    // Only records the new viewport so the button re-renders against it. It
+    // must NOT rewrite pos: on a phone, scrolling collapses the address bar,
+    // which fires resize. Clamping the stored position there would shove the
+    // button up and never bring it back, so it crept up the screen on every
+    // scroll. pos stays where the user dropped it; clamping is display-only.
     function handleResize() {
-      setPos((p) => {
-        if (!p) return p
-        const next = {
-          x: clamp(p.x, MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN),
-          y: clamp(p.y, MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN),
-        }
-        posRef.current = next
-        return next
-      })
+      setViewport({ w: window.innerWidth, h: window.innerHeight })
     }
     window.addEventListener('resize', handleResize)
     return () => {
@@ -186,19 +186,29 @@ export default function HelpAssistant() {
 
   // On desktop, anchor the panel near wherever the button currently is.
   // On narrow screens, ignore button position and use a full-width bottom sheet.
-  const panelStyle = (() => {
-    if (typeof window === 'undefined' || !pos) return undefined
-    if (window.innerWidth < MOBILE_BREAKPOINT) return undefined
+  // Kept inside the viewport for display only, so a shrinking window never
+  // rewrites where the user actually put it.
+  const shownPos =
+    pos && viewport
+      ? {
+          x: clamp(pos.x, MARGIN, viewport.w - BUTTON_SIZE - MARGIN),
+          y: clamp(pos.y, MARGIN, viewport.h - BUTTON_SIZE - MARGIN),
+        }
+      : pos
 
-    const openToLeft = pos.x + BUTTON_SIZE / 2 > window.innerWidth / 2
-    const openUpward = pos.y + BUTTON_SIZE / 2 > window.innerHeight / 2
+  const panelStyle = (() => {
+    if (!shownPos || !viewport) return undefined
+    if (viewport.w < MOBILE_BREAKPOINT) return undefined
+
+    const openToLeft = shownPos.x + BUTTON_SIZE / 2 > viewport.w / 2
+    const openUpward = shownPos.y + BUTTON_SIZE / 2 > viewport.h / 2
 
     const left = openToLeft
-      ? clamp(pos.x + BUTTON_SIZE - PANEL_WIDTH, MARGIN, window.innerWidth - PANEL_WIDTH - MARGIN)
-      : clamp(pos.x, MARGIN, window.innerWidth - PANEL_WIDTH - MARGIN)
+      ? clamp(shownPos.x + BUTTON_SIZE - PANEL_WIDTH, MARGIN, viewport.w - PANEL_WIDTH - MARGIN)
+      : clamp(shownPos.x, MARGIN, viewport.w - PANEL_WIDTH - MARGIN)
     const top = openUpward
-      ? clamp(pos.y - PANEL_GAP - PANEL_HEIGHT, MARGIN, window.innerHeight - PANEL_HEIGHT - MARGIN)
-      : clamp(pos.y + BUTTON_SIZE + PANEL_GAP, MARGIN, window.innerHeight - PANEL_HEIGHT - MARGIN)
+      ? clamp(shownPos.y - PANEL_GAP - PANEL_HEIGHT, MARGIN, viewport.h - PANEL_HEIGHT - MARGIN)
+      : clamp(shownPos.y + BUTTON_SIZE + PANEL_GAP, MARGIN, viewport.h - PANEL_HEIGHT - MARGIN)
 
     return { left, top, width: PANEL_WIDTH }
   })()
@@ -212,9 +222,9 @@ export default function HelpAssistant() {
         onPointerCancel={handlePointerUp}
         onClick={handleClick}
         aria-label="Help assistant"
-        style={{ ...(pos ? { left: pos.x, top: pos.y } : {}), touchAction: 'none' }}
+        style={{ ...(shownPos ? { left: shownPos.x, top: shownPos.y } : {}), touchAction: 'none' }}
         className={`fixed z-40 flex h-12 w-12 select-none items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition-colors hover:bg-emerald-600 active:cursor-grabbing ${
-          pos ? 'cursor-grab' : 'bottom-4 right-4 lg:bottom-6 lg:right-6'
+          shownPos ? 'cursor-grab' : 'bottom-4 right-4 lg:bottom-6 lg:right-6'
         }`}
       >
         {open ? <X size={22} /> : <MessageCircleQuestion size={22} />}

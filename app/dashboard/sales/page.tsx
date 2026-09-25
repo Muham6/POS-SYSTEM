@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Eye, ReceiptText } from 'lucide-react'
 import { money } from '@/lib/money'
+import { fetchAllRows } from '@/lib/fetch-all'
 
 type Sale = {
   id: string
@@ -51,8 +52,25 @@ export default async function SalesHistoryPage({
 
   const sales = (data as unknown as Sale[]) || []
 
-  // Exclude voided sales from total revenue
-  const totalRevenue = sales.filter((s) => s.status !== 'voided').reduce((sum, s) => sum + Number(s.total), 0)
+  // The table shows the 200 most recent, but the headline figure has to cover
+  // the whole date range — summing only the rows on screen would quietly
+  // report a fraction of the takings as if it were the total.
+  const totalsResult = await fetchAllRows<{ total: number | string | null; status: string }>(
+    (fromRow, toRow) => {
+      let q = supabase
+        .from('sales')
+        .select('total, status')
+        .order('created_at', { ascending: false })
+        .range(fromRow, toRow)
+      if (from) q = q.gte('created_at', `${from}T00:00:00`)
+      if (to) q = q.lte('created_at', `${to}T23:59:59`)
+      return q
+    }
+  )
+
+  const countedSales = totalsResult.rows.filter((s) => s.status !== 'voided')
+  const totalRevenue = countedSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0)
+  const listIsPartial = totalsResult.rows.length > sales.length
 
   return (
     <div>
@@ -103,7 +121,12 @@ export default async function SalesHistoryPage({
           </Link>
         )}
         <p className="ml-auto text-sm text-neutral-500 dark:text-neutral-400">
-          {sales.length} sale{sales.length === 1 ? '' : 's'} · {money(totalRevenue)}
+          {countedSales.length} sale{countedSales.length === 1 ? '' : 's'} · {money(totalRevenue)}
+          {listIsPartial && (
+            <span className="block text-xs text-neutral-400 dark:text-neutral-500">
+              Showing the {sales.length} most recent below — the total above covers the whole range.
+            </span>
+          )}
         </p>
       </form>
 

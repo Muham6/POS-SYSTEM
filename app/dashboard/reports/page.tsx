@@ -2,11 +2,17 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import SalesTrendChart from '@/components/sales-trend-chart'
 import { money } from '@/lib/money'
+import { fetchAllRows } from '@/lib/fetch-all'
 
 type LowStockProduct = {
   id: string
   name: string
   stock_quantity: number
+}
+
+type TopProductRow = {
+  product_name: string
+  quantity: number
 }
 
 type PaymentRow = {
@@ -31,8 +37,8 @@ export default async function ReportsPage() {
   const [
     { data: summary, error: summaryError },
     { data: lowStock, error: lowStockError },
-    { data: topProducts, error: topProductsError },
-    { data: paymentRows, error: paymentError },
+    topProductsResult,
+    paymentResult,
     { data: profitRows, error: profitError },
     { data: stockRows, error: stockError },
   ] = await Promise.all([
@@ -47,20 +53,31 @@ export default async function ReportsPage() {
       .select('*')
       .limit(10),
 
-    supabase
-      .from('sale_items')
-      .select('product_name, quantity')
-      .order('quantity', { ascending: false }),
+    // Scoped to the same 7 days as the rest of the page. It used to read every
+    // sale_item ever recorded, which both disagreed with the "last 7 days"
+    // framing everywhere else and would have silently truncated at 1000 rows
+    // once the shop had sold enough.
+    fetchAllRows((fromRow, toRow) =>
+      supabase
+        .from('sale_items')
+        .select('product_name, quantity, sales!inner ( created_at, status )')
+        .eq('sales.status', 'completed')
+        .gte('sales.created_at', `${weekAgo}T00:00:00`)
+        .range(fromRow, toRow)
+    ),
 
-    supabase
-      .from('sales')
-      // Must name the FK: sales points at profiles twice (cashier_id and
-      // voided_by), so a bare profiles(...) embed is ambiguous and errors.
-      .select(
-        'cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles!sales_cashier_id_fkey ( full_name )'
-      )
-      .eq('status', 'completed')
-      .gte('created_at', `${weekAgo}T00:00:00`),
+    fetchAllRows((fromRow, toRow) =>
+      supabase
+        .from('sales')
+        // Must name the FK: sales points at profiles twice (cashier_id and
+        // voided_by), so a bare profiles(...) embed is ambiguous and errors.
+        .select(
+          'cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles!sales_cashier_id_fkey ( full_name )'
+        )
+        .eq('status', 'completed')
+        .gte('created_at', `${weekAgo}T00:00:00`)
+        .range(fromRow, toRow)
+    ),
 
     supabase
       .from('daily_profit_summary')
@@ -73,7 +90,16 @@ export default async function ReportsPage() {
       .eq('is_active', true),
   ])
 
-  const loadError = summaryError || lowStockError || topProductsError || paymentError || profitError || stockError
+  const topProducts = topProductsResult.rows as unknown as TopProductRow[]
+  const paymentRows = paymentResult.rows as unknown as PaymentRow[]
+
+  const loadError =
+    summaryError?.message ||
+    lowStockError?.message ||
+    topProductsResult.error ||
+    paymentResult.error ||
+    profitError?.message ||
+    stockError?.message
 
   const stockValuation = (stockRows || []).reduce(
     (acc, p) => {
@@ -175,7 +201,7 @@ export default async function ReportsPage() {
 
       {loadError && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          Some report data failed to load: {loadError.message}
+          Some report data failed to load: {loadError}
         </p>
       )}
 
@@ -256,7 +282,7 @@ export default async function ReportsPage() {
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-            Top selling products
+            Top selling products (last 7 days)
           </h2>
 
           <div className="mt-3 space-y-2">

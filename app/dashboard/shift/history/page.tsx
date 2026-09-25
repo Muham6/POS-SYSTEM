@@ -18,7 +18,12 @@ export default async function ShiftHistoryPage() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('shifts')
-    .select('id, opened_at, closed_at, opening_float, expected_cash, counted_cash, variance, status, profiles ( full_name )')
+    // Naming the constraint rather than relying on there being only one FK to
+    // profiles — a bare embed silently becomes ambiguous the day a second one
+    // is added, which is exactly how the Reports query broke.
+    .select(
+      'id, opened_at, closed_at, opening_float, expected_cash, counted_cash, variance, status, profiles!shifts_cashier_id_fkey ( full_name )'
+    )
     .order('opened_at', { ascending: false })
     .limit(100)
 

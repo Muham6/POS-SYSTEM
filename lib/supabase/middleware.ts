@@ -4,11 +4,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Hiding a nav link isn't a security boundary — these prefixes are the real
 // gate for admin-only areas. Keep in sync with the admin-only links built in
 // app/dashboard/layout.tsx.
+// Admin-only pages that sit *inside* an area cashiers can otherwise reach.
+// Sales history is open to cashiers now, but refunding from it is not.
+const ADMIN_ONLY_PATTERNS = [/^\/dashboard\/sales\/[^/]+\/return\/?$/]
+
 const ADMIN_ONLY_PREFIXES = [
   '/dashboard/products',
   '/dashboard/stock-history',
   '/dashboard/suppliers',
-  '/dashboard/sales',
   '/dashboard/customers',
   '/dashboard/shift/history',
   '/dashboard/reports',
@@ -18,7 +21,10 @@ const ADMIN_ONLY_PREFIXES = [
 ]
 
 function isAdminOnlyPath(path: string) {
-  return ADMIN_ONLY_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  return (
+    ADMIN_ONLY_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)) ||
+    ADMIN_ONLY_PATTERNS.some((pattern) => pattern.test(path))
+  )
 }
 
 // Runs on every request (via proxy.ts at the project root).

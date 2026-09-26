@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Eye, ReceiptText } from 'lucide-react'
 import { money } from '@/lib/money'
 import { fetchAllRows } from '@/lib/fetch-all'
+import { getProfile } from '@/lib/auth'
 
 type Sale = {
   id: string
@@ -27,6 +28,11 @@ export default async function SalesHistoryPage({
 }) {
   const { from, to } = await searchParams
   const supabase = await createClient()
+  const profile = await getProfile()
+  const isAdmin = profile?.role === 'admin'
+  // A cashier sees only what they rang up — not other staff's takings, and not
+  // the shop's overall revenue.
+  const ownOnly = !isAdmin && profile ? profile.id : null
 
   let query = supabase
     .from('sales')
@@ -41,6 +47,7 @@ export default async function SalesHistoryPage({
     .order('created_at', { ascending: false })
     .limit(200)
 
+  if (ownOnly) query = query.eq('cashier_id', ownOnly)
   if (from) query = query.gte('created_at', `${from}T00:00:00`)
   if (to) query = query.lte('created_at', `${to}T23:59:59`)
 
@@ -62,6 +69,7 @@ export default async function SalesHistoryPage({
         .select('total, status')
         .order('created_at', { ascending: false })
         .range(fromRow, toRow)
+      if (ownOnly) q = q.eq('cashier_id', ownOnly)
       if (from) q = q.gte('created_at', `${from}T00:00:00`)
       if (to) q = q.lte('created_at', `${to}T23:59:59`)
       return q
@@ -79,7 +87,9 @@ export default async function SalesHistoryPage({
           <Link href="/dashboard" className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
             ← Overview
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Sales History</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            {isAdmin ? 'Sales History' : 'My Sales'}
+          </h1>
         </div>
 
         <a

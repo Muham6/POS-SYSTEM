@@ -5,6 +5,7 @@ import Receipt from '@/components/receipt'
 import VoidSaleButton from '@/components/void-sale-button'
 import { Undo2 } from 'lucide-react'
 import { money } from '@/lib/money'
+import { notFound } from 'next/navigation'
 
 type SaleDetail = {
   id: string
@@ -43,13 +44,19 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
       `
       id, sale_number, created_at, subtotal, discount, total,
       cash_amount, card_amount, transfer_amount, payment_method,
-      status, void_reason,
+      status, void_reason, cashier_id,
       profiles!sales_cashier_id_fkey ( full_name ),
       customers ( name, company_or_store, phone )
       `
     )
     .eq('id', id)
-    .single()
+    // A cashier can only open a sale they rang up. Without this they could
+    // read any colleague's sale by guessing the URL, which the list hides.
+    .maybeSingle()
+
+  if (sale && profile?.role !== 'admin' && (sale as { cashier_id?: string }).cashier_id !== profile?.id) {
+    notFound()
+  }
 
   const { data: items } = await supabase
     .from('sale_items')

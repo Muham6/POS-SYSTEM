@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/auth'
 import { NextRequest } from 'next/server'
 
 type SaleRow = {
@@ -27,6 +28,11 @@ export async function GET(request: NextRequest) {
   const to = searchParams.get('to')
 
   const supabase = await createClient()
+  const profile = await getProfile()
+
+  if (!profile) {
+    return new Response('Not authenticated', { status: 401 })
+  }
 
   let query = supabase
     .from('sales')
@@ -52,6 +58,9 @@ export async function GET(request: NextRequest) {
     `
     )
     .order('created_at', { ascending: false })
+
+  // Same scoping as the page: a cashier exports only their own sales.
+  if (profile.role !== 'admin') query = query.eq('cashier_id', profile.id)
 
   if (from) {
     query = query.gte('created_at', `${from}T00:00:00`)

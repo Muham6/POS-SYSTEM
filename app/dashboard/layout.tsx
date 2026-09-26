@@ -24,12 +24,13 @@ export default async function DashboardLayout({
   { href: '/dashboard', label: 'Overview', live: true },
   { href: '/dashboard/sell', label: 'Sell', live: true },
   { href: '/dashboard/shift', label: 'Shift', live: true },
+  { href: '/dashboard/sales', label: 'Sales History', live: true },
+  { href: '/dashboard/stock-count', label: 'Stock Count', live: true },
 ]
 const adminLinks = [
   { href: '/dashboard/products', label: 'Products', live: true },
   { href: '/dashboard/stock-history', label: 'Stock History', live: true },
   { href: '/dashboard/suppliers', label: 'Suppliers', live: true },
-  { href: '/dashboard/sales', label: 'Sales History', live: true },
   { href: '/dashboard/customers', label: 'Customers', live: true },
   { href: '/dashboard/shift/history', label: 'Shift History', live: true },
   { href: '/dashboard/reports', label: 'Reports', live: true },

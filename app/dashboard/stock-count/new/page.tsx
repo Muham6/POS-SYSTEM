@@ -6,11 +6,13 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/toast-provider'
 import { ClipboardList } from 'lucide-react'
+import { friendlyError } from '@/lib/friendly-error'
 
 type Product = {
   id: string
   name: string
   sku: string | null
+  category_id: string | null
   categories: { name: string } | null
 }
 
@@ -20,6 +22,8 @@ export default function NewStockCountPage() {
   const { showToast } = useToast()
 
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [counted, setCounted] = useState<Record<string, string>>({})
   const [search, setSearch] = useState('')
   const [note, setNote] = useState('')
@@ -34,15 +38,19 @@ export default function NewStockCountPage() {
     // see what the system expects, they tend to write that number down instead
     // of what is actually on the shelf, and the count stops being evidence.
     async function loadProducts() {
-      const { data, error: loadError } = await supabase
-        .from('products')
-        .select('id, name, sku, categories ( name )')
-        .eq('is_active', true)
-        .order('name')
+      const [{ data, error: loadError }, { data: cats }] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, sku, category_id, categories ( name )')
+          .eq('is_active', true)
+          .order('name'),
+        supabase.from('categories').select('id, name').order('name'),
+      ])
 
       if (cancelled) return
-      if (loadError) setError(loadError.message)
+      if (loadError) setError(friendlyError(loadError.message))
       setProducts((data as unknown as Product[]) || [])
+      setCategories(cats || [])
       setLoading(false)
     }
 
@@ -54,13 +62,16 @@ export default function NewStockCountPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Counting a whole shop in one go is unrealistic — a category filter lets
+  // someone count just the drinks fridge, or one shelf, and submit that.
   const filtered = useMemo(() => {
-    if (!search.trim()) return products
-    const q = search.toLowerCase()
-    return products.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q)
-    )
-  }, [search, products])
+    const q = search.trim().toLowerCase()
+    return products.filter((p) => {
+      const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q)
+      const matchesCategory = !categoryFilter || p.category_id === categoryFilter
+      return matchesSearch && matchesCategory
+    })
+  }, [search, categoryFilter, products])
 
   const enteredCount = Object.values(counted).filter((v) => v.trim() !== '').length
 
@@ -118,14 +129,35 @@ export default function NewStockCountPage() {
         </p>
       )}
 
-      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="mt-6 flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 sm:flex-row dark:border-neutral-800 dark:bg-neutral-900">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search product or SKU…"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+          className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
         />
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label="Filter by category"
+          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 sm:w-56 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {(categoryFilter || search.trim()) && (
+        <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          Showing {filtered.length} of {products.length} products. Anything not shown is simply left out of this
+          count — you can count one section at a time.
+        </p>
+      )}
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <table className="w-full text-left text-sm">

@@ -17,6 +17,7 @@ import { PauseCircle, X, Package, Camera } from 'lucide-react'
 import BarcodeScanner from '@/components/barcode-scanner'
 import { useToast } from '@/components/toast-provider'
 import { money } from '@/lib/money'
+import { fetchAllRows } from '@/lib/fetch-all'
 
 type Product = {
   id: string
@@ -155,16 +156,37 @@ export default function SellPage() {
   }, [hydrated, cart, cashAmount, cardAmount, transferAmount, selectedCustomer])
 
   async function loadProducts() {
-    const { data: productData } = await supabase
-      .from('products')
-      .select('id, name, sku, stock_quantity, is_active, image_url, low_stock_threshold')
-      .eq('is_active', true)
-      .order('name')
-    setProducts(productData || [])
+    // Both reads are paged. Supabase caps a select at 1000 rows silently, and
+    // every product carries a Retail and a Wholesale unit — so product_units
+    // hits that cap at 500 products. A truncated unit list doesn't look like an
+    // error: the products still appear on the grid, they just can't be priced
+    // or added to the cart, which reads as a data problem rather than a bug.
+    const productResult = await fetchAllRows<Product>((fromRow, toRow) =>
+      supabase
+        .from('products')
+        .select('id, name, sku, stock_quantity, is_active, image_url, low_stock_threshold')
+        .eq('is_active', true)
+        .order('name')
+        .range(fromRow, toRow)
+    )
 
-    const { data: unitData } = await supabase.from('product_units').select('*')
+    const unitResult = await fetchAllRows<Unit>((fromRow, toRow) =>
+      supabase.from('product_units').select('*').order('product_id').range(fromRow, toRow)
+    )
+
+    if (productResult.error || unitResult.error) {
+      showToast(`Could not load the product list: ${productResult.error || unitResult.error}`)
+      return
+    }
+
+    if (productResult.truncated || unitResult.truncated) {
+      showToast('The product list is too large to load in full — some items may be missing.')
+    }
+
+    setProducts(productResult.rows)
+
     const grouped: Record<string, Unit[]> = {}
-    ;(unitData || []).forEach((u: Unit) => {
+    unitResult.rows.forEach((u: Unit) => {
       if (!grouped[u.product_id]) grouped[u.product_id] = []
       grouped[u.product_id].push(u)
     })
@@ -189,7 +211,15 @@ export default function SellPage() {
   }
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return products.slice(0, 30)
+    // Only a fraction of the catalogue is in stock at any time — 34 of 225 when
+    // the shop opened. Taking the first 30 by name alone filled the opening
+    // screen with greyed-out tiles the cashier can't tap, so stock comes first.
+    // Array.prototype.sort is stable, so each group stays alphabetical.
+    if (!search.trim()) {
+      return [...products]
+        .sort((a, b) => Number(b.stock_quantity > 0) - Number(a.stock_quantity > 0))
+        .slice(0, 30)
+    }
     const q = search.toLowerCase()
     return products.filter(
       (p) => p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q)
@@ -613,7 +643,7 @@ export default function SellPage() {
 
         {!search.trim() && products.length > 30 && (
           <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
-            Showing 30 of {products.length} products — search or scan to find a specific item.
+            Showing 30 of {products.length} products, in stock first — search or scan to find a specific item.
           </p>
         )}
 

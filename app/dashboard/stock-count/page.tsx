@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { ClipboardList } from 'lucide-react'
+import { friendlyError } from '@/lib/friendly-error'
 
 type CountRow = {
   id: string
@@ -49,7 +50,7 @@ export default async function StockCountsPage() {
 
       {error && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          Couldn&apos;t load stock counts: {error.message}
+          Couldn&apos;t load stock counts: {friendlyError(error.message)}
         </p>
       )}
 

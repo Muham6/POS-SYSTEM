@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/toast-provider'
 import { AlertTriangle, Barcode, Package, Printer, Search, Wand2, X } from 'lucide-react'
 import { money } from '@/lib/money'
+import { friendlyError } from '@/lib/friendly-error'
 
 type Product = {
   id: string
@@ -198,7 +199,7 @@ export default function ProductLabelsPage() {
       if (cancelled) return
 
       if (error) {
-        setLoadError(`Couldn't load products: ${error.message}`)
+        setLoadError(`Couldn't load products: ${friendlyError(error.message)}`)
         setProducts([])
       } else {
         setProducts((data as Product[]) || [])

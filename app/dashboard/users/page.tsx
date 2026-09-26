@@ -3,6 +3,7 @@ import { getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import AddCashierForm from '@/components/add-cashier-form'
 import UserActions from '@/components/user-actions'
+import { friendlyError } from '@/lib/friendly-error'
 
 type UserProfile = {
   id: string
@@ -32,7 +33,7 @@ export default async function UsersPage() {
 
       {error && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          Error loading users: {error.message}
+          Error loading users: {friendlyError(error.message)}
         </p>
       )}
 

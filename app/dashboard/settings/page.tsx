@@ -289,6 +289,7 @@ export default function SettingsPage() {
             cash={2200 + (form.vat_rate ? Math.round(2200 * parseFloat(form.vat_rate)) / 100 : 0)}
             card={0}
             transfer={0}
+            cashierName="Your cashier"
             storeSettings={{
               store_name: form.store_name || 'Store',
               address: form.address,

@@ -33,6 +33,7 @@ export default function Receipt({
   transfer,
   changeDue,
   customerLabel,
+  cashierName,
   storeSettings,
   voided,
   onNewSale,
@@ -49,6 +50,8 @@ export default function Receipt({
   /** Only known at the till — a reprinted sale doesn't record what was tendered. */
   changeDue?: number
   customerLabel?: string | null
+  /** Who rang the sale up — printed so every receipt is attributable. */
+  cashierName?: string | null
   storeSettings: StoreSettings
   voided?: boolean
   onNewSale?: () => void
@@ -155,7 +158,10 @@ export default function Receipt({
         <div className="mt-4 border-t border-dashed border-neutral-300 pt-4 text-center">
           <p className="text-sm font-semibold text-neutral-900">{saleNumber}</p>
           <p className="text-xs text-neutral-400">{dateLabel}</p>
-          {customerLabel && <p className="mt-1 text-xs text-neutral-500">{customerLabel}</p>}
+          {customerLabel && (
+            <p className="mt-1 text-xs text-neutral-500">Customer: {customerLabel}</p>
+          )}
+          {cashierName && <p className="mt-1 text-xs text-neutral-500">Served by: {cashierName}</p>}
         </div>
 
         <div className="mt-4 space-y-2 border-t border-dashed border-neutral-300 pt-4">

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
+import { friendlyError } from '@/lib/friendly-error'
 
 type Item = {
   id: string
@@ -42,7 +43,7 @@ export default async function StockCountDetailPage({ params }: { params: Promise
           ← Stock counts
         </Link>
         <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          {error ? `Couldn't load this count: ${error.message}` : 'Count not found.'}
+          {error ? `Couldn't load this count: ${friendlyError(error.message)}` : 'Count not found.'}
         </p>
       </div>
     )

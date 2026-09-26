@@ -4,6 +4,7 @@ import { Eye, ReceiptText } from 'lucide-react'
 import { money } from '@/lib/money'
 import { fetchAllRows } from '@/lib/fetch-all'
 import { getProfile } from '@/lib/auth'
+import { friendlyError } from '@/lib/friendly-error'
 
 type Sale = {
   id: string
@@ -54,7 +55,7 @@ export default async function SalesHistoryPage({
   const { data, error } = await query
 
   if (error) {
-    return <p className="text-sm text-red-600 dark:text-red-300">Error loading sales: {error.message}</p>
+    return <p className="text-sm text-red-600 dark:text-red-300">Error loading sales: {friendlyError(error.message)}</p>
   }
 
   const sales = (data as unknown as Sale[]) || []

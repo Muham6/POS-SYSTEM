@@ -107,6 +107,8 @@ export default function SellPage() {
 
   const [mobileCartOpen, setMobileCartOpen] = useState(false)
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
+  // Printed on the receipt so every sale is attributable to whoever rang it up.
+  const [cashierName, setCashierName] = useState<string | null>(null)
 
   const [heldSales, setHeldSales] = useState<HeldSale[]>([])
   const [hydrated, setHydrated] = useState(false)
@@ -118,6 +120,7 @@ export default function SellPage() {
   useEffect(() => {
     loadProducts()
     loadCustomers()
+    loadCashierName()
     hydrateFromStorage()
     supabase.from('store_settings').select('*').eq('id', 1).single().then(({ data }) => setStoreSettings(data))
     searchRef.current?.focus()
@@ -166,6 +169,15 @@ export default function SellPage() {
       grouped[u.product_id].push(u)
     })
     setUnitsByProduct(grouped)
+  }
+
+  async function loadCashierName() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+    setCashierName(data?.full_name || null)
   }
 
   async function loadCustomers() {
@@ -565,6 +577,7 @@ export default function SellPage() {
         transfer={receipt.transfer}
         changeDue={receipt.changeDue}
         customerLabel={receipt.customer ? receipt.customer.name || receipt.customer.company_or_store : null}
+        cashierName={cashierName}
         storeSettings={storeSettings}
         onNewSale={startNewSale}
       />

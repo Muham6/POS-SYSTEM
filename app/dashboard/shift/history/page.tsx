@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { History } from 'lucide-react'
+import { friendlyError } from '@/lib/friendly-error'
+import { money } from '@/lib/money'
 
 type Shift = {
   id: string
@@ -38,7 +40,7 @@ export default async function ShiftHistoryPage() {
 
       {error && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          Could not load shift history: {error.message}
+          Could not load shift history: {friendlyError(error.message)}
         </p>
       )}
 
@@ -66,15 +68,15 @@ export default async function ShiftHistoryPage() {
                   {s.closed_at ? new Date(s.closed_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right text-neutral-700 dark:text-neutral-300">
-                  {s.expected_cash != null ? `₦${Number(s.expected_cash).toLocaleString()}` : '—'}
+                  {s.expected_cash != null ? money(Number(s.expected_cash)) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right text-neutral-700 dark:text-neutral-300">
-                  {s.counted_cash != null ? `₦${Number(s.counted_cash).toLocaleString()}` : '—'}
+                  {s.counted_cash != null ? money(Number(s.counted_cash)) : '—'}
                 </td>
                 <td className={`px-4 py-3 text-right font-medium ${
                   s.variance == null ? 'text-neutral-300 dark:text-neutral-600' : Math.abs(s.variance) < 0.01 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-300'
                 }`}>
-                  {s.variance != null ? `${s.variance > 0 ? '+' : ''}₦${Number(s.variance).toLocaleString()}` : '—'}
+                  {s.variance != null ? `${s.variance > 0 ? '+' : ''}${money(Number(s.variance))}` : '—'}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${

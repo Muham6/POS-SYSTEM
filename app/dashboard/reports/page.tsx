@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import SalesTrendChart from '@/components/sales-trend-chart'
 import { money } from '@/lib/money'
 import { fetchAllRows } from '@/lib/fetch-all'
+import { friendlyError } from '@/lib/friendly-error'
 
 type LowStockProduct = {
   id: string
@@ -201,7 +202,7 @@ export default async function ReportsPage() {
 
       {loadError && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          Some report data failed to load: {loadError}
+          Some report data failed to load: {friendlyError(loadError)}
         </p>
       )}
 

@@ -192,6 +192,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
         cash={Number(s.cash_amount)}
         card={Number(s.card_amount)}
         transfer={Number(s.transfer_amount)}
+        cashierName={s.profiles?.full_name || null}
         customerLabel={s.customers ? s.customers.name || s.customers.company_or_store : null}
         storeSettings={storeSettings}
         voided={isCancelled}

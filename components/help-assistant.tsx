@@ -9,13 +9,13 @@ type Point = { x: number; y: number }
 
 const SUGGESTED = [
   'How do I make a sale?',
-  'How do I receive new stock?',
-  'How do shifts work?',
-  'What does low stock mean?',
+  'How do I charge the wholesale price?',
+  'How do I refund a customer?',
+  'What is a stock count?',
 ]
 
 const FALLBACK_ANSWER =
-  "I don't have a canned answer for that yet. Try asking about selling, stock, suppliers, shifts, or settings — or check the sidebar for the relevant screen."
+  "I don't have a canned answer for that yet. Try asking about selling, retail vs wholesale prices, refunds, shifts, stock counts, VAT, customers, or settings — or check the sidebar for the relevant screen."
 
 const BUTTON_SIZE = 48
 const MARGIN = 16
@@ -258,7 +258,7 @@ export default function HelpAssistant() {
               <div>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {aiConfigured === false
-                    ? "Ask about selling, stock, shifts, suppliers, or settings — I'm running in offline FAQ mode (no AI key set up), so I match your question against a short list of built-in answers rather than understanding free-form questions."
+                    ? "Ask about selling, retail vs wholesale prices, refunds, shifts, stock counts, VAT, customers, or settings — I'm running in offline FAQ mode (no AI key set up), so I match your question against a short list of built-in answers rather than understanding free-form questions."
                     : 'Ask me anything about using this app.'}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">

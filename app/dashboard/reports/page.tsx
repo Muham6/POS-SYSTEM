@@ -40,7 +40,6 @@ export default async function ReportsPage() {
     { data: lowStock, error: lowStockError },
     topProductsResult,
     paymentResult,
-    { data: profitRows, error: profitError },
     { data: stockRows, error: stockError },
   ] = await Promise.all([
     supabase
@@ -81,11 +80,6 @@ export default async function ReportsPage() {
     ),
 
     supabase
-      .from('daily_profit_summary')
-      .select('*')
-      .gte('sale_day', weekAgo),
-
-    supabase
       .from('products')
       .select('stock_quantity, cost_price')
       .eq('is_active', true),
@@ -99,7 +93,6 @@ export default async function ReportsPage() {
     lowStockError?.message ||
     topProductsResult.error ||
     paymentResult.error ||
-    profitError?.message ||
     stockError?.message
 
   const stockValuation = (stockRows || []).reduce(
@@ -127,9 +120,6 @@ export default async function ReportsPage() {
     (sum, r) => sum + Number(r.num_sales),
     0
   )
-
-  const todayProfitRow = (profitRows || []).find((r) => r.sale_day === today)
-  const weekProfit = (profitRows || []).reduce((sum, r) => sum + Number(r.profit || 0), 0)
 
   const typedPaymentRows = (paymentRows as unknown as PaymentRow[]) || []
 
@@ -206,7 +196,7 @@ export default async function ReportsPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
           <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Today
@@ -244,18 +234,6 @@ export default async function ReportsPage() {
           >
             View products →
           </Link>
-        </div>
-
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-          <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-            Profit (7 days)
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {money(weekProfit)}
-          </p>
-          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-            Today: {money(Number(todayProfitRow?.profit || 0))} · approximate
-          </p>
         </div>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">

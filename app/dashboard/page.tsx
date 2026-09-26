@@ -16,20 +16,20 @@ export default async function DashboardOverview() {
 
   let todayTotal = 0
   let todayCount = 0
-  let todayProfit = 0
   let lowStockCount = 0
   let trendData: { sale_day: string; total_revenue: number }[] = []
 
   if (isAdmin) {
-    const [{ data: summary }, { data: lowStock }, { data: profitRows }] = await Promise.all([
+    // Profit is deliberately not read here. The owner asked for margins to stay
+    // off the screen, and the surest way for a number not to be shown is for the
+    // page never to fetch it. daily_profit_summary is untouched in the database.
+    const [{ data: summary }, { data: lowStock }] = await Promise.all([
       supabase.from('daily_sales_summary').select('*').gte('sale_day', weekAgo).order('sale_day', { ascending: false }),
       supabase.from('low_stock_products').select('id'),
-      supabase.from('daily_profit_summary').select('*').eq('sale_day', today),
     ])
     const todayRow = (summary || []).find((r) => r.sale_day === today)
     todayTotal = Number(todayRow?.total_revenue) || 0
     todayCount = Number(todayRow?.num_sales) || 0
-    todayProfit = Number(profitRows?.[0]?.profit) || 0
     lowStockCount = (lowStock || []).length
     trendData = summary || []
   }
@@ -56,7 +56,7 @@ export default async function DashboardOverview() {
 
       {isAdmin && (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
               <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
                 <Wallet size={16} />
@@ -66,17 +66,6 @@ export default async function DashboardOverview() {
                 {money(todayTotal)}
               </p>
               <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{todayCount} sale{todayCount === 1 ? '' : 's'}</p>
-            </div>
-
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-              <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
-                <TrendingUp size={16} />
-                <p className="text-xs uppercase tracking-wider">Profit today</p>
-              </div>
-              <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100 sm:text-2xl">
-                {money(todayProfit)}
-              </p>
-              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">approximate</p>
             </div>
 
             <Link

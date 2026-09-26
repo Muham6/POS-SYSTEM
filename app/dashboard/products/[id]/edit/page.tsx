@@ -24,6 +24,7 @@ export default function EditProductPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState('')
   const [loadError, setLoadError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -39,6 +40,7 @@ export default function EditProductPage() {
     stock_quantity: '',
     low_stock_threshold: '',
     category_id: '',
+    supplier_id: '',
     image_url: '',
   })
 
@@ -52,10 +54,12 @@ export default function EditProductPage() {
       const [
         { data: product, error: productError },
         { data: cats },
+        { data: sups },
         { data: unitRows },
       ] = await Promise.all([
         supabase.from('products').select('*').eq('id', productId).single(),
         supabase.from('categories').select('id, name').order('name'),
+        supabase.from('suppliers').select('id, name').eq('is_active', true).order('name'),
         supabase
           .from('product_units')
           .select('*')
@@ -73,11 +77,13 @@ export default function EditProductPage() {
           stock_quantity: String(product.stock_quantity ?? ''),
           low_stock_threshold: String(product.low_stock_threshold ?? ''),
           category_id: product.category_id || '',
+          supplier_id: product.supplier_id || '',
           image_url: product.image_url || '',
         })
         setOriginalStock(product.stock_quantity ?? 0)
       }
       setCategories(cats || [])
+      setSuppliers(sups || [])
       setUnits(unitRows || [])
       setFetching(false)
     }
@@ -214,6 +220,7 @@ export default function EditProductPage() {
         cost_price: form.cost_price ? parseFloat(form.cost_price) : null,
         low_stock_threshold: parseInt(form.low_stock_threshold || '5'),
         category_id: form.category_id || null,
+        supplier_id: form.supplier_id || null,
         image_url: form.image_url || null,
       })
       .eq('id', productId)
@@ -406,6 +413,28 @@ export default function EditProductPage() {
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="supplier"
+            className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+          >
+            Manufacturer
+          </label>
+          <select
+            id="supplier"
+            value={form.supplier_id}
+            onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+          >
+            <option value="">No manufacturer</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>

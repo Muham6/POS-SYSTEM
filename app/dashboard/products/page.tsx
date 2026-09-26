@@ -13,6 +13,7 @@ type Product = {
   stock_quantity: number
   low_stock_threshold: number
   image_url: string | null
+  supplier_id: string | null
   categories: { name: string } | null
 }
 
@@ -24,20 +25,36 @@ export default async function ProductsPage({
   const { category } = await searchParams
   const supabase = await createClient()
 
-  let query = supabase
-    .from('products')
-    .select(
-      `id, name, sku, price, stock_quantity, low_stock_threshold, image_url, is_active, category_id, categories ( name )`
-    )
-    .eq('is_active', true)
-    .order('name')
+  const BASE_COLUMNS = `id, name, sku, price, stock_quantity, low_stock_threshold, image_url, is_active, category_id, categories ( name )`
 
-  if (category) {
-    query = query.eq('category_id', category)
+  function buildQuery(columns: string) {
+    const q = supabase.from('products').select(columns).eq('is_active', true).order('name')
+    return category ? q.eq('category_id', category) : q
   }
 
-  const { data: productsData, error: productsError } = await query
+  // supplier_id arrives with migration 0005. If the code is deployed before that
+  // migration is run, asking for the column would fail the whole listing and the
+  // shop would see an empty Products page — so fall back to the columns that have
+  // always existed and simply show no manufacturer until the migration lands.
+  let { data: productsData, error: productsError } = await buildQuery(`${BASE_COLUMNS}, supplier_id`)
+
+  if (productsError?.message?.includes('supplier_id')) {
+    ;({ data: productsData, error: productsError } = await buildQuery(BASE_COLUMNS))
+  }
+
   const products = (productsData as unknown as Product[]) || []
+
+  // Looked up separately rather than embedded. An embed makes the manufacturer
+  // name a hard dependency of the whole listing — if that relationship is ever
+  // ambiguous or missing, the page shows nothing at all instead of showing the
+  // products without a manufacturer against them.
+  const supplierIds = [...new Set(products.map((p) => p.supplier_id).filter(Boolean))] as string[]
+  const supplierNames = new Map<string, string>()
+
+  if (supplierIds.length > 0) {
+    const { data: supplierRows } = await supabase.from('suppliers').select('id, name').in('id', supplierIds)
+    for (const s of supplierRows || []) supplierNames.set(s.id, s.name)
+  }
 
   const { data: categories } = await supabase
     .from('categories')
@@ -135,7 +152,14 @@ export default async function ProductsPage({
                             <Package size={16} />
                           </div>
                         )}
-                        <span className="font-medium text-neutral-900 dark:text-neutral-100">{p.name}</span>
+                        <div>
+                          <span className="font-medium text-neutral-900 dark:text-neutral-100">{p.name}</span>
+                          {p.supplier_id && supplierNames.has(p.supplier_id) && (
+                            <span className="block text-xs text-neutral-400 dark:text-neutral-500">
+                              {supplierNames.get(p.supplier_id)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
 

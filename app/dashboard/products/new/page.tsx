@@ -19,6 +19,7 @@ export default function NewProductPage() {
   const { showToast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -32,6 +33,7 @@ export default function NewProductPage() {
     stock_quantity: '',
     low_stock_threshold: '5',
     category_id: '',
+    supplier_id: '',
     image_url: '',
   })
 
@@ -43,17 +45,21 @@ export default function NewProductPage() {
   const [extraUnits, setExtraUnits] = useState<ExtraUnit[]>([])
 
   useEffect(() => {
-    supabase
-      .from('categories')
-      .select('id, name')
-      .order('name')
-      .then(({ data, error }) => {
-        if (error) {
-          setError(error.message)
-          return
-        }
-        setCategories(data || [])
-      })
+    async function loadLookups() {
+      const [{ data: cats, error: catError }, { data: sups }] = await Promise.all([
+        supabase.from('categories').select('id, name').order('name'),
+        supabase.from('suppliers').select('id, name').eq('is_active', true).order('name'),
+      ])
+
+      if (catError) {
+        setError(catError.message)
+        return
+      }
+      setCategories(cats || [])
+      setSuppliers(sups || [])
+    }
+
+    loadLookups()
   }, [supabase])
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -148,6 +154,7 @@ export default function NewProductPage() {
         stock_quantity: parseInt(form.stock_quantity || '0'),
         low_stock_threshold: parseInt(form.low_stock_threshold || '5'),
         category_id: form.category_id || null,
+        supplier_id: form.supplier_id || null,
         image_url: form.image_url || null,
       })
       .select()
@@ -426,6 +433,32 @@ export default function NewProductPage() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Manufacturer / supplier */}
+        <div>
+          <label
+            htmlFor="supplier"
+            className="block text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+          >
+            Manufacturer
+          </label>
+          <select
+            id="supplier"
+            value={form.supplier_id}
+            onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-emerald-400"
+          >
+            <option value="">No manufacturer</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            Who makes this — used to work out what to reorder from whom. Add new ones under Suppliers.
+          </p>
         </div>
 
         <button

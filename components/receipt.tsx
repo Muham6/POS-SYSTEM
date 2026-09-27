@@ -168,7 +168,7 @@ export default function Receipt({
           {items.map((i, idx) => (
             <div key={idx} className="flex justify-between text-sm">
               <span className="text-neutral-700">
-                {i.product_name} × {i.quantity} {i.unit_name || ''}
+                {i.product_name} × {i.quantity}
               </span>
               <span className="text-neutral-900">{money((i.price * i.quantity))}</span>
             </div>

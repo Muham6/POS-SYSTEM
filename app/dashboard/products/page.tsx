@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Pencil, History, Package } from 'lucide-react'
 import DeleteProductButton from '@/components/delete-product-button'
 import CategoryFilter from '@/components/category-filter'
+import ProductSearch from '@/components/product-search'
 import { createClient } from '@/lib/supabase/server'
 import { money } from '@/lib/money'
 
@@ -20,16 +21,21 @@ type Product = {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>
+  searchParams: Promise<{ category?: string; q?: string }>
 }) {
-  const { category } = await searchParams
+  const { category, q } = await searchParams
+  // Commas and brackets have meaning inside PostgREST's or() filter, and % / * are
+  // wildcards — strip them so a typed search can't break or widen the query.
+  const term = (q || '').replace(/[,()%*\\]/g, ' ').trim()
   const supabase = await createClient()
 
   const BASE_COLUMNS = `id, name, sku, price, stock_quantity, low_stock_threshold, image_url, is_active, category_id, categories ( name )`
 
   function buildQuery(columns: string) {
-    const q = supabase.from('products').select(columns).eq('is_active', true).order('name')
-    return category ? q.eq('category_id', category) : q
+    let query = supabase.from('products').select(columns).eq('is_active', true).order('name')
+    if (category) query = query.eq('category_id', category)
+    if (term) query = query.or(`name.ilike.%${term}%,sku.ilike.%${term}%`)
+    return query
   }
 
   // supplier_id arrives with migration 0005. If the code is deployed before that
@@ -69,6 +75,8 @@ export default async function ProductsPage({
         </h1>
 
         <div className="flex items-center gap-3">
+          <ProductSearch current={q} category={category} />
+
           <CategoryFilter
             categories={categories || []}
             current={category}
@@ -114,7 +122,9 @@ export default async function ProductsPage({
         <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center dark:border-neutral-700 dark:bg-neutral-900">
           <Package size={28} className="mx-auto mb-3 text-neutral-300 dark:text-neutral-600" />
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            {category
+            {term
+              ? `No products match "${term}".`
+              : category
               ? 'No products in this category yet.'
               : 'No products yet — add your first one to get started.'}
           </p>

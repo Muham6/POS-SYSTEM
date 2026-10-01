@@ -61,6 +61,9 @@ export async function GET(request: NextRequest) {
 
   // Same scoping as the page: a cashier exports only their own sales.
   if (profile.role !== 'admin') query = query.eq('cashier_id', profile.id)
+  // An admin exporting one person's sales, as filtered on the page.
+  const staff = searchParams.get('staff')
+  if (profile.role === 'admin' && staff) query = query.eq('cashier_id', staff)
 
   if (from) {
     query = query.gte('created_at', `${from}T00:00:00`)

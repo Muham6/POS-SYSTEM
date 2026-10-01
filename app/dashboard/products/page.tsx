@@ -69,19 +69,12 @@ export default async function ProductsPage({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
           Products
         </h1>
 
-        <div className="flex items-center gap-3">
-          <ProductSearch current={q} category={category} />
-
-          <CategoryFilter
-            categories={categories || []}
-            current={category}
-          />
-
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/dashboard/products/labels"
             className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
@@ -110,6 +103,15 @@ export default async function ProductsPage({
             + Add Product
           </Link>
         </div>
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <ProductSearch current={q} category={category} />
+
+        <CategoryFilter
+          categories={categories || []}
+          current={category}
+        />
       </div>
 
       {productsError && (

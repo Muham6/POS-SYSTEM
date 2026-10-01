@@ -25,9 +25,12 @@ type Sale = {
 export default async function SalesHistoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; staff?: string }>
+  searchParams: Promise<{ from?: string; to?: string; staff?: string; show?: string }>
 }) {
-  const { from, to, staff } = await searchParams
+  const { from, to, staff, show } = await searchParams
+  // Voided and fully refunded sales are kept for the audit trail and the till
+  // reconciliation, but hidden from the list unless asked for.
+  const showAll = show === 'all'
   const supabase = await createClient()
   const profile = await getProfile()
   const isAdmin = profile?.role === 'admin'
@@ -59,6 +62,7 @@ export default async function SalesHistoryPage({
     .order('created_at', { ascending: false })
     .limit(200)
 
+  if (!showAll) query = query.eq('status', 'completed')
   if (cashierFilter) query = query.eq('cashier_id', cashierFilter)
   if (from) query = query.gte('created_at', `${from}T00:00:00`)
   if (to) query = query.lte('created_at', `${to}T23:59:59`)
@@ -120,7 +124,16 @@ export default async function SalesHistoryPage({
   const partRefunds = refundsResult.rows.reduce((sum, r) => sum + (Number(r.total_refund) || 0), 0)
   const totalRevenue =
     countedSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0) - partRefunds
-  const listIsPartial = totalsResult.rows.length > sales.length
+  const listIsPartial = (showAll ? totalsResult.rows.length : countedSales.length) > sales.length
+  const hiddenCount = totalsResult.rows.length - countedSales.length
+
+  // Same filters, with the voided/refunded toggle flipped.
+  const toggleParams = new URLSearchParams()
+  if (from) toggleParams.set('from', from)
+  if (to) toggleParams.set('to', to)
+  if (staffFilter) toggleParams.set('staff', staffFilter)
+  if (!showAll) toggleParams.set('show', 'all')
+  const toggleHref = `/dashboard/sales${toggleParams.size ? `?${toggleParams}` : ''}`
 
   return (
     <div>
@@ -191,6 +204,7 @@ export default async function SalesHistoryPage({
             </select>
           </div>
         )}
+        {showAll && <input type="hidden" name="show" value="all" />}
         <button
           type="submit"
           className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
@@ -216,6 +230,16 @@ export default async function SalesHistoryPage({
           )}
         </p>
       </form>
+
+      {(showAll || hiddenCount > 0) && (
+        <div className="mb-4 text-right">
+          <Link href={toggleHref} className="text-sm text-neutral-500 hover:underline dark:text-neutral-400">
+            {showAll
+              ? 'Hide voided & refunded'
+              : `Show ${hiddenCount} voided & refunded`}
+          </Link>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <table className="w-full text-sm">

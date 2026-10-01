@@ -112,7 +112,9 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
               Return items
             </Link>
           )}
-          {profile?.role === 'admin' && isOpen && <VoidSaleButton saleId={s.id} />}
+          {/* Once anything has been returned, voiding would restock and refund it a
+              second time, so the rest has to go back through Return items. */}
+          {profile?.role === 'admin' && isOpen && returnRecords.length === 0 && <VoidSaleButton saleId={s.id} />}
         </div>
       </div>
 

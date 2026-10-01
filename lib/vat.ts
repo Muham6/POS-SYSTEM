@@ -7,6 +7,9 @@ export type VatSaleRow = {
   total: number | string | null
   // Recorded at the moment of sale. NULL on sales rung up before VAT was charged.
   vat_amount?: number | string | null
+  // Refunds against this sale. A fully returned sale is 'refunded' and never
+  // reaches the report; these are the part-returns on sales still completed.
+  returns?: { total_refund: number | string | null }[] | null
 }
 
 export type VatDayRow = {
@@ -116,7 +119,7 @@ export async function fetchCompletedSalesForMonth(
   for (let page = 0; page < 200; page++) {
     const { data, error } = await supabase
       .from('sales')
-      .select('created_at, total, vat_amount')
+      .select('created_at, total, vat_amount, returns ( total_refund )')
       // Only completed sales are VAT owed — refunded and cancelled sales are not.
       .eq('status', 'completed')
       .gte('created_at', from)
@@ -140,8 +143,13 @@ export function buildVatBreakdown(rows: VatSaleRow[]): { days: VatDayRow[]; tota
 
   rows.forEach((row) => {
     const day = String(row.created_at).slice(0, 10)
-    const gross = Number(row.total) || 0
-    const vat = vatForSale(row)
+    const total = Number(row.total) || 0
+    const refunded = (row.returns || []).reduce((sum, r) => sum + (Number(r.total_refund) || 0), 0)
+    const gross = Math.max(total - refunded, 0)
+    // A refund hands back the VAT on those goods too. process_return refunds
+    // at the same proportion of the total the customer paid, so the VAT still
+    // owed falls in the same proportion.
+    const vat = total > 0 ? vatForSale(row) * (gross / total) : 0
 
     let entry = byDay.get(day)
 

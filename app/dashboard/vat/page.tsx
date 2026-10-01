@@ -154,7 +154,9 @@ export default async function VatReportPage({
               <span className="font-semibold">zero VAT</span>, because none was
               ever added to them. That is deliberate — claiming VAT on a sale
               where the customer was never charged it would overstate what you
-              owe. Refunded and cancelled sales are left out.
+              owe. Refunded and cancelled sales are left out, and money
+              handed back on a part-returned sale is taken off, along with
+              its VAT.
             </p>
           </div>
 

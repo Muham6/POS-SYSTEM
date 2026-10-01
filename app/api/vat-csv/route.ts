@@ -77,11 +77,11 @@ export async function GET(request: NextRequest) {
     totals.vat.toFixed(2),
   ])
 
-  // Historical sales don't store the rate that applied on the day, so the
-  // accountant needs to see which rate produced these numbers.
+  // Tells the accountant how these figures were produced, matching the caveat
+  // on the VAT page.
   csvRows.push([])
   csvRows.push([
-    `Note: VAT-inclusive pricing. VAT = total - total / (1 + ${vatRate}/100). All rows calculated at the store's current VAT rate of ${vatRate}%, which may differ from the rate in force during the period. Refunded and cancelled sales excluded.`,
+    `Note: VAT is added on top of the shelf price, and each sale records the exact VAT charged on it at the time, so a later change to the VAT rate does not alter these figures. Gross = what customers paid, including VAT. Net = gross minus VAT. Sales made before VAT was switched on carry zero VAT, because none was charged. Refunded and cancelled sales are excluded, and money refunded on part-returned sales is taken off, along with its VAT. The store's current rate is ${vatRate}%.`,
   ])
 
   const csv = [header, ...csvRows]

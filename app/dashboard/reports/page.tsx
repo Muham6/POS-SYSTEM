@@ -6,6 +6,15 @@ import { fetchAllRows } from '@/lib/fetch-all'
 import { friendlyError } from '@/lib/friendly-error'
 import { dayStart, shopDay, shopToday, shopDaysAgo } from '@/lib/time'
 
+type PaidOutRow = {
+  created_at: string
+  total_refund: number
+  refund_cash: number
+  refund_card: number
+  refund_transfer: number
+  sales: { status: string; cashier_id: string | null; created_at: string } | null
+}
+
 type LowStockProduct = {
   id: string
   name: string
@@ -18,6 +27,8 @@ type TopProductRow = {
 }
 
 type PaymentRow = {
+  status: string
+  total: number
   cash_amount: number
   card_amount: number
   transfer_amount: number
@@ -39,6 +50,8 @@ export default async function ReportsPage() {
     topProductsResult,
     paymentResult,
     { data: stockRows, error: stockError },
+    returnedItemsResult,
+    paidOutResult,
   ] = await Promise.all([
     supabase
       .from('daily_sales_summary')
@@ -70,9 +83,11 @@ export default async function ReportsPage() {
         // Must name the FK: sales points at profiles twice (cashier_id and
         // voided_by), so a bare profiles(...) embed is ambiguous and errors.
         .select(
-          'cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles!sales_cashier_id_fkey ( full_name )'
+          'status, total, cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles!sales_cashier_id_fkey ( full_name )'
         )
-        .eq('status', 'completed')
+        // A fully refunded sale still took its money on the day; the refund
+        // comes off separately below, the same way the till count works.
+        .in('status', ['completed', 'refunded'])
         .gte('created_at', dayStart(weekAgo))
         .range(fromRow, toRow)
     ),
@@ -81,17 +96,40 @@ export default async function ReportsPage() {
       .from('products')
       .select('stock_quantity, cost_price')
       .eq('is_active', true),
+
+    // Items brought back from this week's completed sales, so top sellers
+    // aren't credited with goods that came back.
+    fetchAllRows<{ product_name: string; quantity: number }>((fromRow, toRow) =>
+      supabase
+        .from('return_items')
+        .select('product_name, quantity, returns!inner ( sales!inner ( created_at, status ) )')
+        .eq('returns.sales.status', 'completed')
+        .gte('returns.sales.created_at', dayStart(weekAgo))
+        .range(fromRow, toRow)
+    ),
+
+    // Refunds paid out this week, with the sale they were against.
+    fetchAllRows((fromRow, toRow) =>
+      supabase
+        .from('returns')
+        .select('created_at, total_refund, refund_cash, refund_card, refund_transfer, sales ( status, cashier_id, created_at )')
+        .gte('created_at', dayStart(weekAgo))
+        .range(fromRow, toRow)
+    ),
   ])
 
   const topProducts = topProductsResult.rows as unknown as TopProductRow[]
   const paymentRows = paymentResult.rows as unknown as PaymentRow[]
+  const paidOutRows = paidOutResult.rows as unknown as PaidOutRow[]
 
   const loadError =
     summaryError?.message ||
     lowStockError?.message ||
     topProductsResult.error ||
     paymentResult.error ||
-    stockError?.message
+    stockError?.message ||
+    returnedItemsResult.error ||
+    paidOutResult.error
 
   const stockValuation = (stockRows || []).reduce(
     (acc, p) => {
@@ -126,6 +164,9 @@ export default async function ReportsPage() {
     { name: string; revenue: number; count: number; discount: number; discountedSales: number }
   > = {}
   typedPaymentRows.forEach((row) => {
+    // A cashier's takings are their completed sales; a fully refunded sale
+    // isn't takings at all. Part-refunds come off below.
+    if (row.status !== 'completed') return
     const key = row.cashier_id || 'unknown'
     const name = row.profiles?.full_name || 'Unknown'
     if (!cashierTotals[key]) cashierTotals[key] = { name, revenue: 0, count: 0, discount: 0, discountedSales: 0 }
@@ -138,6 +179,12 @@ export default async function ReportsPage() {
       cashierTotals[key].discount += rowDiscount
       cashierTotals[key].discountedSales += 1
     }
+  })
+  paidOutRows.forEach((r) => {
+    // Only refunds against this week's completed sales — the ones counted above.
+    if (r.sales?.status !== 'completed' || new Date(r.sales.created_at) < new Date(dayStart(weekAgo))) return
+    const entry = cashierTotals[r.sales.cashier_id || 'unknown']
+    if (entry) entry.revenue -= Number(r.total_refund) || 0
   })
   const cashierBreakdown = Object.values(cashierTotals).sort((a, b) => b.revenue - a.revenue)
 
@@ -155,6 +202,20 @@ export default async function ReportsPage() {
     }
   )
 
+  // Money handed back comes out of the method it was refunded by, on the day
+  // it was handed back — matching Sales History's takings table.
+  const todayRefunds = { cash: 0, card: 0, transfer: 0 }
+  paidOutRows.forEach((r) => {
+    paymentTotals.cash -= Number(r.refund_cash) || 0
+    paymentTotals.card -= Number(r.refund_card) || 0
+    paymentTotals.transfer -= Number(r.refund_transfer) || 0
+    if (shopDay(r.created_at) === today) {
+      todayRefunds.cash += Number(r.refund_cash) || 0
+      todayRefunds.card += Number(r.refund_card) || 0
+      todayRefunds.transfer += Number(r.refund_transfer) || 0
+    }
+  })
+
   const todayPaymentTotals = (paymentRows || [])
     .filter((row) => shopDay(row.created_at) === today)
     .reduce(
@@ -165,9 +226,9 @@ export default async function ReportsPage() {
         return acc
       },
       {
-        cash: 0,
-        card: 0,
-        transfer: 0,
+        cash: -todayRefunds.cash,
+        card: -todayRefunds.card,
+        transfer: -todayRefunds.transfer,
       }
     )
 
@@ -177,8 +238,12 @@ export default async function ReportsPage() {
     productTotals[item.product_name] =
       (productTotals[item.product_name] || 0) + item.quantity
   })
+  returnedItemsResult.rows.forEach((item) => {
+    productTotals[item.product_name] = (productTotals[item.product_name] || 0) - item.quantity
+  })
 
   const topFive = Object.entries(productTotals)
+    .filter(([, qty]) => qty > 0)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
 

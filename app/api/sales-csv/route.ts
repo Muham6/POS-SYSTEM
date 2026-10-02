@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
+import { fetchAllRows } from '@/lib/fetch-all'
 import { NextRequest } from 'next/server'
 import { SHOP_TIME_ZONE, dayStart, dayEnd, shopToday } from '@/lib/time'
 
@@ -35,46 +36,55 @@ export async function GET(request: NextRequest) {
     return new Response('Not authenticated', { status: 401 })
   }
 
-  let query = supabase
-    .from('sales')
-    .select(
+  // Paged, because a single read stops at 1000 rows without saying so.
+  const { rows: data, error } = await fetchAllRows((fromRow, toRow) => {
+    let query = supabase
+      .from('sales')
+      .select(
+        `
+        sale_number,
+        created_at,
+        status,
+        subtotal,
+        discount,
+        total,
+        cash_amount,
+        card_amount,
+        transfer_amount,
+        payment_method,
+        profiles!sales_cashier_id_fkey (
+          full_name
+        ),
+        customers (
+          name,
+          company_or_store
+        )
       `
-      sale_number,
-      created_at,
-      status,
-      subtotal,
-      discount,
-      total,
-      cash_amount,
-      card_amount,
-      transfer_amount,
-      payment_method,
-      profiles!sales_cashier_id_fkey (
-        full_name
-      ),
-      customers (
-        name,
-        company_or_store
       )
-    `
-    )
-    .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(fromRow, toRow)
 
-  // Same scoping as the page: a cashier exports only their own sales.
-  if (profile.role !== 'admin') query = query.eq('cashier_id', profile.id)
-  // An admin exporting one person's sales, as filtered on the page.
-  const staff = searchParams.get('staff')
-  if (profile.role === 'admin' && staff) query = query.eq('cashier_id', staff)
+    // Same scoping as the page: a cashier exports only their own sales.
+    if (profile.role !== 'admin') query = query.eq('cashier_id', profile.id)
+    // An admin exporting one person's sales, as filtered on the page.
+    const staff = searchParams.get('staff')
+    if (profile.role === 'admin' && staff) query = query.eq('cashier_id', staff)
 
-  if (from) {
-    query = query.gte('created_at', dayStart(from))
+    if (from) {
+      query = query.gte('created_at', dayStart(from))
+    }
+
+    if (to) {
+      query = query.lte('created_at', dayEnd(to))
+    }
+
+    return query
+  })
+
+  if (error) {
+    return new Response(`Error: ${error}`, { status: 500 })
   }
-
-  if (to) {
-    query = query.lte('created_at', dayEnd(to))
-  }
-
-  const { data } = await query
 
   const rows = (data as unknown as SaleRow[]) || []
 

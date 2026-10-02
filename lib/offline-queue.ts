@@ -1,6 +1,10 @@
 export type QueuedSale = {
   localId: string
   createdAt: string
+  /** Sent as record_sale's client_ref. Older entries don't have one; localId is used instead. */
+  clientRef?: string
+  /** Why the last attempt to send it was refused, if it was. */
+  lastError?: string
   payload: {
     p_items: { unit_id: string; quantity: number }[]
     p_cash_amount: number
@@ -23,10 +27,14 @@ export function getQueuedSales(): QueuedSale[] {
   }
 }
 
-export function queueSale(payload: QueuedSale['payload']): QueuedSale {
+export function queueSale(
+  payload: QueuedSale['payload'],
+  extra: { clientRef?: string; createdAt?: string } = {}
+): QueuedSale {
   const sale: QueuedSale = {
     localId: `offline-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    createdAt: new Date().toISOString(),
+    createdAt: extra.createdAt || new Date().toISOString(),
+    clientRef: extra.clientRef,
     payload,
   }
   const current = getQueuedSales()
@@ -37,4 +45,12 @@ export function queueSale(payload: QueuedSale['payload']): QueuedSale {
 export function removeQueuedSale(localId: string) {
   const current = getQueuedSales()
   window.localStorage.setItem(KEY, JSON.stringify(current.filter((s) => s.localId !== localId)))
+}
+
+export function markQueuedSaleFailed(localId: string, message: string) {
+  const current = getQueuedSales()
+  window.localStorage.setItem(
+    KEY,
+    JSON.stringify(current.map((s) => (s.localId === localId ? { ...s, lastError: message } : s)))
+  )
 }

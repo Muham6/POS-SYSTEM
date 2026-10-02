@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
+import { fetchAllRows } from '@/lib/fetch-all'
 import { NextRequest } from 'next/server'
 import { SHOP_TIME_ZONE, dayStart, dayEnd, shopToday } from '@/lib/time'
 
@@ -34,40 +35,44 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient()
 
-  let query = supabase
-    .from('stock_movement_log')
-    .select('*')
-    .limit(1000)
+  // Paged, because a single read stops at 1000 rows without saying so. The
+  // order has to be fixed for paging to be reliable.
+  const { rows, error } = await fetchAllRows<MovementRow>((fromRow, toRow) => {
+    let query = supabase
+      .from('stock_movement_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(fromRow, toRow)
 
-  if (productId) {
-    query = query.eq('product_id', productId)
-  }
+    if (productId) {
+      query = query.eq('product_id', productId)
+    }
 
-  if (type && type !== 'all') {
-    query = query.eq('movement_type', type)
-  }
+    if (type && type !== 'all') {
+      query = query.eq('movement_type', type)
+    }
 
-  if (from) {
-    query = query.gte('created_at', dayStart(from))
-  }
+    if (from) {
+      query = query.gte('created_at', dayStart(from))
+    }
 
-  if (to) {
-    query = query.lte('created_at', dayEnd(to))
-  }
+    if (to) {
+      query = query.lte('created_at', dayEnd(to))
+    }
 
-  if (batch) {
-    query = query.eq('batch_reference', batch)
-  }
+    if (batch) {
+      query = query.eq('batch_reference', batch)
+    }
 
-  const { data, error } = await query
+    return query
+  })
 
   if (error) {
-    return new Response(`Error: ${error.message}`, {
+    return new Response(`Error: ${error}`, {
       status: 500,
     })
   }
-
-  const rows = (data as MovementRow[]) || []
 
   const header = [
     'Date',

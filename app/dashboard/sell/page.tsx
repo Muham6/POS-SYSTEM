@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Receipt from '@/components/receipt'
 import { queueSale } from '@/lib/offline-queue'
+import { newSaleRef, recordSale } from '@/lib/record-sale'
 import {
   loadActiveDraft,
   saveActiveDraft,
@@ -541,23 +542,44 @@ export default function SellPage() {
       p_discount: 0,
       p_customer_id: selectedCustomer?.id || null,
     }
+    // One reference per sale. If the connection drops after the server has
+    // saved it, the queued copy carries the same reference and the server
+    // recognises it instead of selling the goods a second time.
+    const saleRef = { clientRef: newSaleRef(), createdAt: new Date().toISOString() }
 
     // If we're already offline, don't even attempt the network call.
     if (!navigator.onLine) {
-      queueSale(payload)
+      queueSale(payload, saleRef)
       finishSaleLocally()
       setLoading(false)
       return
     }
 
     try {
-      const { data: saleId, error } = await supabase.rpc('process_sale', payload)
+      const result = await recordSale(supabase, {
+        clientRef: saleRef.clientRef,
+        items: payload.p_items,
+        cash,
+        card,
+        transfer,
+        customerId: payload.p_customer_id,
+        soldAt: saleRef.createdAt,
+      })
 
-      if (error) {
+      if (result.error) {
+        // The connection dropped mid-sale. Safe to queue: if it did reach the
+        // server, the reference stops it being recorded twice.
+        if (result.networkFailure && result.safeToResend) {
+          queueSale(payload, saleRef)
+          finishSaleLocally()
+          setLoading(false)
+          return
+        }
         setLoading(false)
-        setError(error.message)
+        setError(result.error)
         return
       }
+      const saleId = result.saleId
 
       const { data: sale } = await supabase
         .from('sales')
@@ -582,7 +604,7 @@ export default function SellPage() {
       loadProducts()
     } catch {
       // The request itself failed to reach the server — treat as offline.
-      queueSale(payload)
+      queueSale(payload, saleRef)
       finishSaleLocally()
     }
 

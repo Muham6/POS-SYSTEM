@@ -514,6 +514,14 @@ export default function SellPage() {
     if (cart.length === 0) return
     setError('')
 
+    // Clearing a quantity box leaves the line at 0, which the database rejects
+    // with "Invalid quantity in cart" — say which line instead.
+    const emptyLine = cart.find((i) => !(i.quantity > 0))
+    if (emptyLine) {
+      setError(`Enter a quantity for ${emptyLine.product_name}, or remove it from the cart.`)
+      return
+    }
+
     if (remaining !== 0) {
       setError(
         remaining > 0

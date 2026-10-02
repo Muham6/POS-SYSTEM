@@ -6,6 +6,7 @@ import { fetchAllRows } from '@/lib/fetch-all'
 import { getProfile } from '@/lib/auth'
 import { friendlyError } from '@/lib/friendly-error'
 import DailyTakings, { type TakingsDay } from '@/components/daily-takings'
+import { SHOP_TIME_ZONE, dayStart, dayEnd, shopDay, shopToday, shopDaysAgo } from '@/lib/time'
 
 type Sale = {
   id: string
@@ -65,8 +66,8 @@ export default async function SalesHistoryPage({
 
   if (!showAll) query = query.eq('status', 'completed')
   if (cashierFilter) query = query.eq('cashier_id', cashierFilter)
-  if (from) query = query.gte('created_at', `${from}T00:00:00`)
-  if (to) query = query.lte('created_at', `${to}T23:59:59`)
+  if (from) query = query.gte('created_at', dayStart(from))
+  if (to) query = query.lte('created_at', dayEnd(to))
 
   const { data, error } = await query
 
@@ -94,8 +95,8 @@ export default async function SalesHistoryPage({
         .order('created_at', { ascending: false })
         .range(fromRow, toRow)
       if (cashierFilter) q = q.eq('cashier_id', cashierFilter)
-      if (from) q = q.gte('created_at', `${from}T00:00:00`)
-      if (to) q = q.lte('created_at', `${to}T23:59:59`)
+      if (from) q = q.gte('created_at', dayStart(from))
+      if (to) q = q.lte('created_at', dayEnd(to))
       return q
     }
   )
@@ -112,8 +113,8 @@ export default async function SalesHistoryPage({
       .order('created_at', { ascending: false })
       .range(fromRow, toRow)
     if (cashierFilter) q = q.eq('sales.cashier_id', cashierFilter)
-    if (from) q = q.gte('sales.created_at', `${from}T00:00:00`)
-    if (to) q = q.lte('sales.created_at', `${to}T23:59:59`)
+    if (from) q = q.gte('sales.created_at', dayStart(from))
+    if (to) q = q.lte('sales.created_at', dayEnd(to))
     return q
   })
 
@@ -142,14 +143,14 @@ export default async function SalesHistoryPage({
       .order('created_at', { ascending: false })
       .range(fromRow, toRow)
     if (cashierFilter) q = q.eq('sales.cashier_id', cashierFilter)
-    if (from) q = q.gte('created_at', `${from}T00:00:00`)
-    if (to) q = q.lte('created_at', `${to}T23:59:59`)
+    if (from) q = q.gte('created_at', dayStart(from))
+    if (to) q = q.lte('created_at', dayEnd(to))
     return q
   })
 
   const takingsByDay = new Map<string, TakingsDay>()
   const dayEntry = (iso: string) => {
-    const day = String(iso).slice(0, 10)
+    const day = shopDay(iso)
     let entry = takingsByDay.get(day)
     if (!entry) {
       entry = { day, sales: 0, cash: 0, transfer: 0, card: 0, refunds: 0 }
@@ -187,12 +188,8 @@ export default async function SalesHistoryPage({
       : undefined
 
   // Quick date ranges, counted back from today in the shop's own time zone.
-  const todayLagos = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' })
-  const daysBefore = (n: number) => {
-    const d = new Date(`${todayLagos}T00:00:00Z`)
-    d.setUTCDate(d.getUTCDate() - n)
-    return d.toISOString().slice(0, 10)
-  }
+  const todayLagos = shopToday()
+  const daysBefore = shopDaysAgo
   const presetHref = (fromDay: string) => {
     const params = new URLSearchParams({ from: fromDay, to: todayLagos })
     if (staffFilter) params.set('staff', staffFilter)
@@ -370,7 +367,7 @@ export default async function SalesHistoryPage({
               return (
               <tr key={s.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
                 <td className="px-4 py-3 whitespace-nowrap text-neutral-500 dark:text-neutral-400">
-                  {new Date(s.created_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}
+                  {new Date(s.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' })}
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-neutral-600 dark:text-neutral-400">{s.sale_number}</td>
                 <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">{s.profiles?.full_name || '—'}</td>

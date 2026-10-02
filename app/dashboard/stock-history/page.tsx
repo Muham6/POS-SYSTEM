@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { SHOP_TIME_ZONE, dayStart, dayEnd } from '@/lib/time'
 
 type Movement = {
   id: string
@@ -109,11 +110,11 @@ export default async function StockHistoryPage({
     }
 
     if (from) {
-      q = q.gte('created_at', `${from}T00:00:00`)
+      q = q.gte('created_at', dayStart(from))
     }
 
     if (to) {
-      q = q.lte('created_at', `${to}T23:59:59`)
+      q = q.lte('created_at', dayEnd(to))
     }
 
     if (batch) {
@@ -175,11 +176,11 @@ export default async function StockHistoryPage({
     }
 
     if (from) {
-      q = q.gte('created_at', `${from}T00:00:00`)
+      q = q.gte('created_at', dayStart(from))
     }
 
     if (to) {
-      q = q.lte('created_at', `${to}T23:59:59`)
+      q = q.lte('created_at', dayEnd(to))
     }
 
     if (batch) {
@@ -396,9 +397,7 @@ export default async function StockHistoryPage({
                 className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
               >
                 <td className="whitespace-nowrap px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {new Date(m.created_at).toLocaleString(
-                    'en-NG',
-                    {
+                  {new Date(m.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE,
                       dateStyle: 'medium',
                       timeStyle: 'short',
                     }

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { NextRequest } from 'next/server'
+import { SHOP_TIME_ZONE, dayStart, dayEnd, shopToday } from '@/lib/time'
 
 type SaleRow = {
   sale_number: string
@@ -66,11 +67,11 @@ export async function GET(request: NextRequest) {
   if (profile.role === 'admin' && staff) query = query.eq('cashier_id', staff)
 
   if (from) {
-    query = query.gte('created_at', `${from}T00:00:00`)
+    query = query.gte('created_at', dayStart(from))
   }
 
   if (to) {
-    query = query.lte('created_at', `${to}T23:59:59`)
+    query = query.lte('created_at', dayEnd(to))
   }
 
   const { data } = await query
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
 
   const csvRows = rows.map((s) => [
     s.sale_number,
-    new Date(s.created_at).toLocaleString('en-NG'),
+    new Date(s.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE }),
     s.status,
     s.profiles?.full_name || '',
     s.customers?.name || s.customers?.company_or_store || '',
@@ -118,9 +119,7 @@ export async function GET(request: NextRequest) {
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="sales-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
+      'Content-Disposition': `attachment; filename="sales-${shopToday()}.csv"`,
     },
   })
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { money } from '@/lib/money'
 import { Users } from 'lucide-react'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type Customer = {
   id: string
@@ -16,6 +17,7 @@ type SaleRow = {
   total: number | string | null
   status: string
   created_at: string
+  returns: { total_refund: number | string | null }[] | null
 }
 
 const PAGE_SIZE = 1000
@@ -29,7 +31,7 @@ async function fetchCustomerSales(supabase: Awaited<ReturnType<typeof createClie
   for (let page = 0; page < 200; page++) {
     const { data, error } = await supabase
       .from('sales')
-      .select('customer_id, total, status, created_at')
+      .select('customer_id, total, status, created_at, returns ( total_refund )')
       .not('customer_id', 'is', null)
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
@@ -65,12 +67,16 @@ export default async function CustomersPage({
   const loadError = customerError?.message || salesError
 
   // A refunded sale is money given back, so it doesn't count as spend — but it
-  // still counts as a visit, because she did come in.
+  // still counts as a visit, because she did come in. A voided sale never
+  // happened, so it is neither. Part-returns come off what was spent.
   const stats = new Map<string, { spent: number; visits: number; last: string | null }>()
   sales.forEach((s) => {
-    if (!s.customer_id) return
+    if (!s.customer_id || s.status === 'cancelled') return
     const entry = stats.get(s.customer_id) || { spent: 0, visits: 0, last: null }
-    if (s.status !== 'refunded') entry.spent += Number(s.total) || 0
+    if (s.status === 'completed') {
+      const refunded = (s.returns || []).reduce((sum, r) => sum + (Number(r.total_refund) || 0), 0)
+      entry.spent += (Number(s.total) || 0) - refunded
+    }
     entry.visits += 1
     if (!entry.last || s.created_at > entry.last) entry.last = s.created_at
     stats.set(s.customer_id, entry)
@@ -165,7 +171,7 @@ export default async function CustomersPage({
                 </td>
                 <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">
                   {c.last
-                    ? new Date(c.last).toLocaleDateString('en-NG', {
+                    ? new Date(c.last).toLocaleDateString('en-NG', { timeZone: SHOP_TIME_ZONE,
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',

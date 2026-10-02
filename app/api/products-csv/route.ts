@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { fetchAllRows } from '@/lib/fetch-all'
+import { shopToday } from '@/lib/time'
 
 type ProductRow = {
   id: string
@@ -114,7 +115,7 @@ export async function GET() {
   return new Response('﻿' + csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="products-${new Date().toISOString().slice(0, 10)}.csv"`,
+      'Content-Disposition': `attachment; filename="products-${shopToday()}.csv"`,
     },
   })
 }

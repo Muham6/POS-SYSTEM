@@ -1,4 +1,5 @@
 import type { createClient } from '@/lib/supabase/server'
+import { dayStart, shopDay, shopToday } from '@/lib/time'
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
@@ -45,8 +46,7 @@ export function isValidMonth(value: string): boolean {
 }
 
 export function currentMonth(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  return shopToday().slice(0, 7)
 }
 
 // Anything missing or malformed in the query string falls back to this month,
@@ -65,8 +65,8 @@ export function monthRange(month: string): {
   const nextMonth = m === 12 ? 1 : m + 1
 
   return {
-    from: `${month}-01T00:00:00`,
-    toExclusive: `${nextYear}-${String(nextMonth).padStart(2, '0')}-01T00:00:00`,
+    from: dayStart(`${month}-01`),
+    toExclusive: dayStart(`${nextYear}-${String(nextMonth).padStart(2, '0')}-01`),
   }
 }
 
@@ -92,11 +92,11 @@ export function dayLabel(day: string): string {
 // The month picker offers this month and the months behind it — VAT is filed in
 // arrears, so the previous month is the one that actually gets used most.
 export function monthOptions(count = 24): string[] {
-  const now = new Date()
+  const [year, month] = currentMonth().split('-').map(Number)
   const options: string[] = []
 
   for (let i = 0; i < count; i++) {
-    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth() - i, 1))
+    const d = new Date(Date.UTC(year, month - 1 - i, 1))
     options.push(
       `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
     )
@@ -142,7 +142,7 @@ export function buildVatBreakdown(rows: VatSaleRow[]): { days: VatDayRow[]; tota
   const byDay = new Map<string, VatDayRow>()
 
   rows.forEach((row) => {
-    const day = String(row.created_at).slice(0, 10)
+    const day = shopDay(row.created_at)
     const total = Number(row.total) || 0
     const refunded = (row.returns || []).reduce((sum, r) => sum + (Number(r.total_refund) || 0), 0)
     const gross = Math.max(total - refunded, 0)

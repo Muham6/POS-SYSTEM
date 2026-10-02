@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { ClipboardList } from 'lucide-react'
 import { friendlyError } from '@/lib/friendly-error'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type CountRow = {
   id: string
@@ -81,7 +82,7 @@ export default async function StockCountsPage() {
                   </Link>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-neutral-600 dark:text-neutral-400">
-                  {new Date(c.created_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}
+                  {new Date(c.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' })}
                 </td>
                 {isAdmin && (
                   <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">{c.profiles?.full_name || '—'}</td>

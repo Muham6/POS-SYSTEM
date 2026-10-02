@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/auth'
 import { NextRequest } from 'next/server'
+import { SHOP_TIME_ZONE, dayStart, dayEnd, shopToday } from '@/lib/time'
 
 type MovementRow = {
   created_at: string
@@ -16,6 +18,12 @@ type MovementRow = {
 }
 
 export async function GET(request: NextRequest) {
+  // The Stock History page is admin-only; its export has to be too, or a
+  // cashier can download the whole stock log by typing the address.
+  const profile = await getProfile()
+  if (!profile) return new Response('Not authenticated', { status: 401 })
+  if (profile.role !== 'admin') return new Response('Admins only', { status: 403 })
+
   const { searchParams } = new URL(request.url)
 
   const productId = searchParams.get('product')
@@ -40,11 +48,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (from) {
-    query = query.gte('created_at', `${from}T00:00:00`)
+    query = query.gte('created_at', dayStart(from))
   }
 
   if (to) {
-    query = query.lte('created_at', `${to}T23:59:59`)
+    query = query.lte('created_at', dayEnd(to))
   }
 
   if (batch) {
@@ -76,7 +84,7 @@ export async function GET(request: NextRequest) {
   ]
 
   const csvRows = rows.map((m) => [
-    new Date(m.created_at).toLocaleString('en-NG'),
+    new Date(m.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE }),
     m.product_name,
     m.sku || '',
     m.movement_type,
@@ -100,9 +108,7 @@ export async function GET(request: NextRequest) {
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="stock-history-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
+      'Content-Disposition': `attachment; filename="stock-history-${shopToday()}.csv"`,
     },
   })
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { friendlyError } from '@/lib/friendly-error'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type Item = {
   id: string
@@ -67,7 +68,7 @@ export default async function StockCountDetailPage({ params }: { params: Promise
       </h1>
       <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
         {[
-          new Date(count.created_at).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' }),
+          new Date(count.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'full', timeStyle: 'short' }),
           isAdmin && count.profiles?.full_name ? `Counted by ${count.profiles.full_name}` : null,
           count.note,
         ]

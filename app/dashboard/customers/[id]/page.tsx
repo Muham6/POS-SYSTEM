@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { money } from '@/lib/money'
 import { ShoppingBag } from 'lucide-react'
 import EditCustomerButton from '@/components/edit-customer-button'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type SaleItem = {
   product_name: string
@@ -18,6 +19,7 @@ type Visit = {
   total: number | string | null
   status: string
   sale_items: SaleItem[] | null
+  returns: { total_refund: number | string | null }[] | null
 }
 
 export default async function CustomerStoryPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +35,7 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
         .maybeSingle(),
       supabase
         .from('sales')
-        .select('id, sale_number, created_at, total, status, sale_items ( product_name, quantity, unit_name, line_total )')
+        .select('id, sale_number, created_at, total, status, sale_items ( product_name, quantity, unit_name, line_total ), returns ( total_refund )')
         .eq('customer_id', id)
         .order('created_at', { ascending: false }),
     ])
@@ -51,16 +53,19 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
     )
   }
 
-  const visits = (saleData as unknown as Visit[]) || []
-  const paidVisits = visits.filter((v) => v.status !== 'refunded')
+  // A voided sale never happened, so it isn't a visit at all.
+  const visits = ((saleData as unknown as Visit[]) || []).filter((v) => v.status !== 'cancelled')
+  const paidVisits = visits.filter((v) => v.status === 'completed')
 
-  const totalSpent = paidVisits.reduce((sum, v) => sum + (Number(v.total) || 0), 0)
+  // Part-returns come off what they spent.
+  const refundedOn = (v: Visit) => (v.returns || []).reduce((sum, r) => sum + (Number(r.total_refund) || 0), 0)
+  const totalSpent = paidVisits.reduce((sum, v) => sum + (Number(v.total) || 0) - refundedOn(v), 0)
   const averageBasket = paidVisits.length > 0 ? totalSpent / paidVisits.length : 0
 
   // What she buys most often, by quantity across every visit.
   const productTotals = new Map<string, number>()
   visits.forEach((v) => {
-    if (v.status === 'refunded') return
+    if (v.status !== 'completed') return
     ;(v.sale_items || []).forEach((i) => {
       productTotals.set(i.product_name, (productTotals.get(i.product_name) || 0) + i.quantity)
     })
@@ -69,7 +74,7 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
 
   const displayName = customer.name || customer.company_or_store || 'Unnamed customer'
   const dateLabel = (iso: string) =>
-    new Date(iso).toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    new Date(iso).toLocaleDateString('en-NG', { timeZone: SHOP_TIME_ZONE, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div>
@@ -84,7 +89,7 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
             {[
               customer.name && customer.company_or_store ? customer.company_or_store : null,
               customer.phone,
-              `Customer since ${new Date(customer.created_at).toLocaleDateString('en-NG', { month: 'long', year: 'numeric' })}`,
+              `Customer since ${new Date(customer.created_at).toLocaleDateString('en-NG', { timeZone: SHOP_TIME_ZONE, month: 'long', year: 'numeric' })}`,
             ]
               .filter(Boolean)
               .join(' · ')}
@@ -123,11 +128,11 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
           <p className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Last seen</p>
           <p className="mt-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             {visits[0]
-              ? new Date(visits[0].created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })
+              ? new Date(visits[0].created_at).toLocaleDateString('en-NG', { timeZone: SHOP_TIME_ZONE, day: 'numeric', month: 'short', year: 'numeric' })
               : '—'}
           </p>
           <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-            {visits[0] ? new Date(visits[0].created_at).toLocaleTimeString('en-NG', { timeStyle: 'short' }) : 'Never bought'}
+            {visits[0] ? new Date(visits[0].created_at).toLocaleTimeString('en-NG', { timeZone: SHOP_TIME_ZONE, timeStyle: 'short' }) : 'Never bought'}
           </p>
         </div>
       </div>
@@ -178,7 +183,7 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
                   <div>
                     <p className="font-medium text-neutral-900 dark:text-neutral-100">{dateLabel(v.created_at)}</p>
                     <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                      {new Date(v.created_at).toLocaleTimeString('en-NG', { timeStyle: 'short' })} · {v.sale_number}
+                      {new Date(v.created_at).toLocaleTimeString('en-NG', { timeZone: SHOP_TIME_ZONE, timeStyle: 'short' })} · {v.sale_number}
                       {refunded && (
                         <span className="ml-2 rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
                           Refunded
@@ -196,6 +201,9 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
                     >
                       {money(Number(v.total) || 0)}
                     </p>
+                    {!refunded && refundedOn(v) > 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">−{money(refundedOn(v))} refunded</p>
+                    )}
                     <Link
                       href={`/dashboard/sales/${v.id}`}
                       className="text-xs text-emerald-600 hover:underline dark:text-emerald-400"

@@ -4,6 +4,7 @@ import SalesTrendChart from '@/components/sales-trend-chart'
 import { money } from '@/lib/money'
 import { fetchAllRows } from '@/lib/fetch-all'
 import { friendlyError } from '@/lib/friendly-error'
+import { dayStart, shopDay, shopToday, shopDaysAgo } from '@/lib/time'
 
 type LowStockProduct = {
   id: string
@@ -29,11 +30,8 @@ type PaymentRow = {
 export default async function ReportsPage() {
   const supabase = await createClient()
 
-  const today = new Date().toISOString().slice(0, 10)
-  // eslint-disable-next-line react-hooks/purity
-  const weekAgo = new Date(Date.now() - 7 * 86400000)
-    .toISOString()
-    .slice(0, 10)
+  const today = shopToday()
+  const weekAgo = shopDaysAgo(7)
 
   const [
     { data: summary, error: summaryError },
@@ -62,7 +60,7 @@ export default async function ReportsPage() {
         .from('sale_items')
         .select('product_name, quantity, sales!inner ( created_at, status )')
         .eq('sales.status', 'completed')
-        .gte('sales.created_at', `${weekAgo}T00:00:00`)
+        .gte('sales.created_at', dayStart(weekAgo))
         .range(fromRow, toRow)
     ),
 
@@ -75,7 +73,7 @@ export default async function ReportsPage() {
           'cash_amount, card_amount, transfer_amount, discount, created_at, cashier_id, profiles!sales_cashier_id_fkey ( full_name )'
         )
         .eq('status', 'completed')
-        .gte('created_at', `${weekAgo}T00:00:00`)
+        .gte('created_at', dayStart(weekAgo))
         .range(fromRow, toRow)
     ),
 
@@ -158,7 +156,7 @@ export default async function ReportsPage() {
   )
 
   const todayPaymentTotals = (paymentRows || [])
-    .filter((row) => row.created_at.slice(0, 10) === today)
+    .filter((row) => shopDay(row.created_at) === today)
     .reduce(
       (acc, row) => {
         acc.cash += Number(row.cash_amount) || 0

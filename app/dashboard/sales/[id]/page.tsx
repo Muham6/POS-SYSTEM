@@ -6,6 +6,7 @@ import VoidSaleButton from '@/components/void-sale-button'
 import { Undo2 } from 'lucide-react'
 import { money } from '@/lib/money'
 import { notFound } from 'next/navigation'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type SaleDetail = {
   id: string
@@ -103,7 +104,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
         </Link>
 
         <div className="flex items-center gap-4">
-          {isOpen && totalReturned < totalSold && (
+          {profile?.role === 'admin' && isOpen && totalReturned < totalSold && (
             <Link
               href={`/dashboard/sales/${s.id}/return`}
               className="flex items-center gap-1 text-sm text-amber-600 hover:underline dark:text-amber-400"
@@ -166,7 +167,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
                   <span className="text-neutral-900 dark:text-neutral-100">{money(Number(r.total_refund))}</span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  {new Date(r.created_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}
+                  {new Date(r.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' })}
                   {!r.restocked && ' · not restocked'}
                 </p>
                 <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
@@ -181,7 +182,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
 
       <Receipt
         saleNumber={s.sale_number}
-        dateLabel={new Date(s.created_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}
+        dateLabel={new Date(s.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' })}
         items={(items || []).map((it) => ({
           product_name: it.product_name,
           quantity: it.quantity,

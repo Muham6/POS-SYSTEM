@@ -4,15 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import SalesTrendChart from '@/components/sales-trend-chart'
 import { ShoppingCart, TrendingUp, AlertTriangle, Wallet } from 'lucide-react'
 import { money } from '@/lib/money'
+import { SHOP_TIME_ZONE, shopToday, shopDaysAgo } from '@/lib/time'
 
 export default async function DashboardOverview() {
   const profile = await getProfile()
   const isAdmin = profile?.role === 'admin'
   const supabase = await createClient()
 
-  const today = new Date().toISOString().slice(0, 10)
-  // eslint-disable-next-line react-hooks/purity
-  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+  const today = shopToday()
+  const weekAgo = shopDaysAgo(7)
 
   let todayTotal = 0
   let todayCount = 0
@@ -42,7 +42,7 @@ export default async function DashboardOverview() {
             {profile?.full_name ? `Hi, ${profile.full_name.split(' ')[0]}` : 'Welcome'}
           </h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {new Date().toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {new Date().toLocaleDateString('en-NG', { timeZone: SHOP_TIME_ZONE, weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
         <Link

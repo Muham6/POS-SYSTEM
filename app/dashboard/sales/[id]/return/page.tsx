@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import ReturnForm from '@/components/return-form'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type PriorReturnItem = { sale_item_id: string; quantity: number }
 
@@ -71,7 +72,7 @@ export default async function ReturnSalePage({ params }: { params: Promise<{ id:
       <h1 className="mt-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Return items</h1>
       <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
         Sale {sale.sale_number} ·{' '}
-        {new Date(sale.created_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}
+        {new Date(sale.created_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' })}
       </p>
 
       <ReturnForm saleId={id} lines={lines} refundRatio={refundRatio} />

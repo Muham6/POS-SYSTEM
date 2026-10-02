@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { History } from 'lucide-react'
 import { friendlyError } from '@/lib/friendly-error'
 import { money } from '@/lib/money'
+import { SHOP_TIME_ZONE } from '@/lib/time'
 
 type Shift = {
   id: string
@@ -62,10 +63,10 @@ export default async function ShiftHistoryPage() {
               <tr key={s.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
                 <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">{s.profiles?.full_name || '—'}</td>
                 <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {new Date(s.opened_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' })}
+                  {new Date(s.opened_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' })}
                 </td>
                 <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {s.closed_at ? new Date(s.closed_at).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                  {s.closed_at ? new Date(s.closed_at).toLocaleString('en-NG', { timeZone: SHOP_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' }) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right text-neutral-700 dark:text-neutral-300">
                   {s.expected_cash != null ? money(Number(s.expected_cash)) : '—'}

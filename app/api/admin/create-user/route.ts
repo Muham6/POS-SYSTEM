@@ -18,11 +18,12 @@ export async function POST(request: NextRequest) {
 
   const { data: callerProfile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, is_active')
     .eq('id', user.id)
     .single()
 
-  if (callerProfile?.role !== 'admin') {
+  // A deactivated admin's session can outlive the deactivation.
+  if (callerProfile?.role !== 'admin' || !callerProfile.is_active) {
     return NextResponse.json(
       { error: 'Only admins can create accounts' },
       { status: 403 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { money } from '@/lib/money'
 import { ShoppingBag } from 'lucide-react'
+import EditCustomerButton from '@/components/edit-customer-button'
 
 type SaleItem = {
   product_name: string
@@ -76,17 +77,20 @@ export default async function CustomerStoryPage({ params }: { params: Promise<{ 
         ← Customers
       </Link>
 
-      <div className="mt-2 mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">{displayName}</h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          {[
-            customer.name && customer.company_or_store ? customer.company_or_store : null,
-            customer.phone,
-            `Customer since ${new Date(customer.created_at).toLocaleDateString('en-NG', { month: 'long', year: 'numeric' })}`,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
+      <div className="mt-2 mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">{displayName}</h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            {[
+              customer.name && customer.company_or_store ? customer.company_or_store : null,
+              customer.phone,
+              `Customer since ${new Date(customer.created_at).toLocaleDateString('en-NG', { month: 'long', year: 'numeric' })}`,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        </div>
+        <EditCustomerButton customer={customer} />
       </div>
 
       {salesError && (

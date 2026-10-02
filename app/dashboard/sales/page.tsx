@@ -5,6 +5,7 @@ import { money } from '@/lib/money'
 import { fetchAllRows } from '@/lib/fetch-all'
 import { getProfile } from '@/lib/auth'
 import { friendlyError } from '@/lib/friendly-error'
+import DailyTakings, { type TakingsDay } from '@/components/daily-takings'
 
 type Sale = {
   id: string
@@ -78,11 +79,18 @@ export default async function SalesHistoryPage({
   // The table shows the 200 most recent, but the headline figure has to cover
   // the whole date range — summing only the rows on screen would quietly
   // report a fraction of the takings as if it were the total.
-  const totalsResult = await fetchAllRows<{ total: number | string | null; status: string }>(
+  const totalsResult = await fetchAllRows<{
+    total: number | string | null
+    status: string
+    created_at: string
+    cash_amount: number | string | null
+    card_amount: number | string | null
+    transfer_amount: number | string | null
+  }>(
     (fromRow, toRow) => {
       let q = supabase
         .from('sales')
-        .select('total, status')
+        .select('total, status, created_at, cash_amount, card_amount, transfer_amount')
         .order('created_at', { ascending: false })
         .range(fromRow, toRow)
       if (cashierFilter) q = q.eq('cashier_id', cashierFilter)
@@ -119,7 +127,86 @@ export default async function SalesHistoryPage({
     refundedBySale.set(r.sale_id, (refundedBySale.get(r.sale_id) || 0) + (Number(r.total_refund) || 0))
   }
 
-  const totalsError = totalsResult.error || refundsResult.error
+  // Refunds by the day they were PAID OUT, for the takings table: a customer
+  // returning Monday's purchase on Wednesday takes the money from Wednesday's
+  // drawer. Same rule close_shift uses.
+  const paidOutResult = await fetchAllRows<{
+    created_at: string
+    refund_cash: number | string | null
+    refund_card: number | string | null
+    refund_transfer: number | string | null
+  }>((fromRow, toRow) => {
+    let q = supabase
+      .from('returns')
+      .select('created_at, refund_cash, refund_card, refund_transfer, sales!inner ( cashier_id )')
+      .order('created_at', { ascending: false })
+      .range(fromRow, toRow)
+    if (cashierFilter) q = q.eq('sales.cashier_id', cashierFilter)
+    if (from) q = q.gte('created_at', `${from}T00:00:00`)
+    if (to) q = q.lte('created_at', `${to}T23:59:59`)
+    return q
+  })
+
+  const takingsByDay = new Map<string, TakingsDay>()
+  const dayEntry = (iso: string) => {
+    const day = String(iso).slice(0, 10)
+    let entry = takingsByDay.get(day)
+    if (!entry) {
+      entry = { day, sales: 0, cash: 0, transfer: 0, card: 0, refunds: 0 }
+      takingsByDay.set(day, entry)
+    }
+    return entry
+  }
+  // A fully refunded sale still brought its money in on the day it was rung
+  // up; the refund comes off on the day it was paid out. A voided sale never
+  // happened, so it brings nothing in.
+  for (const s of totalsResult.rows) {
+    if (s.status === 'cancelled') continue
+    const entry = dayEntry(s.created_at)
+    entry.sales += 1
+    entry.cash += Number(s.cash_amount) || 0
+    entry.card += Number(s.card_amount) || 0
+    entry.transfer += Number(s.transfer_amount) || 0
+  }
+  for (const r of paidOutResult.rows) {
+    const entry = dayEntry(r.created_at)
+    const cash = Number(r.refund_cash) || 0
+    const card = Number(r.refund_card) || 0
+    const transfer = Number(r.refund_transfer) || 0
+    entry.cash -= cash
+    entry.card -= card
+    entry.transfer -= transfer
+    entry.refunds += cash + card + transfer
+  }
+  const MAX_TAKINGS_DAYS = 31
+  const allTakingsDays = [...takingsByDay.values()].sort((a, b) => b.day.localeCompare(a.day))
+  const takingsDays = from || to ? allTakingsDays : allTakingsDays.slice(0, MAX_TAKINGS_DAYS)
+  const takingsNote =
+    allTakingsDays.length > takingsDays.length
+      ? `Showing the last ${MAX_TAKINGS_DAYS} days with sales. Pick dates above to see others.`
+      : undefined
+
+  // Quick date ranges, counted back from today in the shop's own time zone.
+  const todayLagos = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' })
+  const daysBefore = (n: number) => {
+    const d = new Date(`${todayLagos}T00:00:00Z`)
+    d.setUTCDate(d.getUTCDate() - n)
+    return d.toISOString().slice(0, 10)
+  }
+  const presetHref = (fromDay: string) => {
+    const params = new URLSearchParams({ from: fromDay, to: todayLagos })
+    if (staffFilter) params.set('staff', staffFilter)
+    if (showAll) params.set('show', 'all')
+    return `/dashboard/sales?${params}`
+  }
+  const presets = [
+    { label: 'Today', from: todayLagos },
+    { label: 'Last 3 days', from: daysBefore(2) },
+    { label: 'Last 7 days', from: daysBefore(6) },
+    { label: 'Last 30 days', from: daysBefore(29) },
+  ]
+
+  const totalsError = totalsResult.error || refundsResult.error || paidOutResult.error
   const countedSales = totalsResult.rows.filter((s) => s.status === 'completed')
   const partRefunds = refundsResult.rows.reduce((sum, r) => sum + (Number(r.total_refund) || 0), 0)
   const totalRevenue =
@@ -153,6 +240,25 @@ export default async function SalesHistoryPage({
         >
           Download CSV
         </a>
+      </div>
+
+      <div className="mb-2 flex flex-wrap gap-2">
+        {presets.map((p) => {
+          const active = from === p.from && to === todayLagos
+          return (
+            <Link
+              key={p.label}
+              href={presetHref(p.from)}
+              className={`rounded-full border px-3 py-1 text-sm transition ${
+                active
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-950/40 dark:text-emerald-300'
+                  : 'border-neutral-300 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800'
+              }`}
+            >
+              {p.label}
+            </Link>
+          )
+        })}
       </div>
 
       <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
@@ -230,6 +336,8 @@ export default async function SalesHistoryPage({
           )}
         </p>
       </form>
+
+      <DailyTakings days={takingsDays} note={takingsNote} />
 
       {(showAll || hiddenCount > 0) && (
         <div className="mb-4 text-right">
